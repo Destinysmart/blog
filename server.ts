@@ -48,7 +48,11 @@ function getDb() {
 }
 
 function saveDb(data: any) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.warn("Failed to write to db.json (expected on read-only serverless environments like Vercel):", err);
+  }
 }
 
 // Seed articles if empty
@@ -188,11 +192,10 @@ if (dbMigrated) {
   saveDb(dbData);
 }
 
-async function startServer() {
-  const app = express();
+const app = express();
 
-  // Increase payload limit for base64 image uploads in tiptap
-  app.use(express.json({ limit: "50mb" }));
+// Increase payload limit for base64 image uploads in tiptap
+app.use(express.json({ limit: "50mb" }));
 
   // XML Sitemap Integration supporting both main and blog domains
   app.get("/sitemap.xml", (req, res) => {
@@ -840,19 +843,6 @@ async function startServer() {
 
   let vite: any = null;
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "custom",
-    });
-    app.use(vite.middlewares);
-  } else {
-    // Production static serving
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath, { index: false }));
-  }
-
   // HTML Meta Injection helper functions
   function getMetadataForPath(reqPath: string) {
     const db = getDb();
@@ -955,53 +945,72 @@ async function startServer() {
     return cleanedHtml.replace("</head>", `${metaTags}\n</head>`);
   }
 
-  // Fallback Wildcard Handler to Serve Hydrated HTML Pages
-  app.get("*", async (req, res, next) => {
-    const url = req.originalUrl || req.url;
-    
-    // Skip API, assets, or other system routes
-    if (
-      url.startsWith("/api/") ||
-      url.includes(".") ||
-      url.startsWith("/@") ||
-      url.startsWith("/node_modules/")
-    ) {
-      return next();
-    }
-    
-    try {
-      let template = "";
+  // Only run server listener and custom client-wildcard routers on persistent hosts, not Vercel
+  if (!process.env.VERCEL) {
+    const runLocal = async () => {
+      // Vite middleware for development
       if (process.env.NODE_ENV !== "production") {
-        const templatePath = path.resolve(process.cwd(), "index.html");
-        if (fs.existsSync(templatePath)) {
-          template = fs.readFileSync(templatePath, "utf-8");
-        } else {
-          return next();
-        }
-        template = await vite.transformIndexHtml(url, template);
+        vite = await createViteServer({
+          server: { middlewareMode: true },
+          appType: "custom",
+        });
+        app.use(vite.middlewares);
       } else {
-        const templatePath = path.resolve(process.cwd(), "dist", "index.html");
-        if (fs.existsSync(templatePath)) {
-          template = fs.readFileSync(templatePath, "utf-8");
-        } else {
+        // Production static serving
+        const distPath = path.join(process.cwd(), "dist");
+        app.use(express.static(distPath, { index: false }));
+      }
+
+      // Fallback Wildcard Handler to Serve Hydrated HTML Pages
+      app.get("*", async (req, res, next) => {
+        const url = req.originalUrl || req.url;
+        
+        // Skip API, assets, or other system routes
+        if (
+          url.startsWith("/api/") ||
+          url.includes(".") ||
+          url.startsWith("/@") ||
+          url.startsWith("/node_modules/")
+        ) {
           return next();
         }
-      }
-      
-      const meta = getMetadataForPath(url);
-      const html = injectMetaTags(template, meta);
-      res.status(200).set({ "Content-Type": "text/html" }).end(html);
-    } catch (e) {
-      if (process.env.NODE_ENV !== "production" && vite) {
-        vite.ssrFixStacktrace(e as Error);
-      }
-      next(e);
-    }
-  });
+        
+        try {
+          let template = "";
+          if (process.env.NODE_ENV !== "production") {
+            const templatePath = path.resolve(process.cwd(), "index.html");
+            if (fs.existsSync(templatePath)) {
+              template = fs.readFileSync(templatePath, "utf-8");
+            } else {
+              return next();
+            }
+            template = await vite.transformIndexHtml(url, template);
+          } else {
+            const templatePath = path.resolve(process.cwd(), "dist", "index.html");
+            if (fs.existsSync(templatePath)) {
+              template = fs.readFileSync(templatePath, "utf-8");
+            } else {
+              return next();
+            }
+          }
+          
+          const meta = getMetadataForPath(url);
+          const html = injectMetaTags(template, meta);
+          res.status(200).set({ "Content-Type": "text/html" }).end(html);
+        } catch (e) {
+          if (process.env.NODE_ENV !== "production" && vite) {
+            vite.ssrFixStacktrace(e as Error);
+          }
+          next(e);
+        }
+      });
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+      app.listen(PORT, "0.0.0.0", () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+    };
 
-startServer();
+    runLocal();
+  }
+
+  export default app;
