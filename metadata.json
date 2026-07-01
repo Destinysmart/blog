@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Bitlance Blog Hub",
+  "description": "Premium Blog \u0026 Resources hub for Bitlance - optimized for SEO, AI search, and conversion.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-brand-50: #FFF5F0;
+  --color-brand-100: #FFEAD9;
+  --color-brand-200: #FFD4B3;
+  --color-brand-300: #FFBE8C;
+  --color-brand-400: #FFA766;
+  --color-brand-500: #FF7A00;
+  --color-brand-600: #E66E00;
+  --color-brand-700: #B35500;
+  --color-brand-800: #803D00;
+  --color-brand-900: #4D2500;
+}
+
+body {
+  @apply text-gray-900 bg-white font-sans antialiased selection:bg-brand-500 selection:text-white;
+}
+
+.heading-display {
+  @apply font-display tracking-tight;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  scroll-margin-top: 120px;
+}
+
+.glass-card {
+  @apply bg-white/80 backdrop-blur-md border border-gray-100 shadow-sm;
+}
+
+.prose table {
+  @apply border-collapse table-auto w-full my-8 text-sm text-left overflow-hidden;
+}
+
+.prose table th {
+  @apply bg-gray-50 font-semibold p-4 text-gray-900 border border-gray-200;
+}
+
+.prose table td {
+  @apply p-4 border border-gray-200;
+}
+
+.prose table p {
+  @apply m-0;
+}
+
+.prose img {
+  @apply rounded-xl;
+}
