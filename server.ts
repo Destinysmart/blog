@@ -499,6 +499,50 @@ app.get("/api/categories", async (req, res) => {
   }
 });
 
+app.get("/api/topics", async (req, res) => {
+  res.json([]);
+});
+
+app.get("/api/featured-collections", async (req, res) => {
+  res.json([]);
+});
+
+app.get("/api/bookmarks/check/:id", (req, res) => {
+  res.json({ isBookmarked: false });
+});
+
+app.get("/api/bookmarks", (req, res) => {
+  res.json([]);
+});
+
+app.post("/api/bookmarks", (req, res) => {
+  res.json({ success: true });
+});
+
+app.delete("/api/bookmarks/:id", (req, res) => {
+  res.json({ success: true });
+});
+
+app.get("/api/follows/feed", (req, res) => {
+  res.json([]);
+});
+
+app.get("/api/follows/check/:id", (req, res) => {
+  res.json({ isFollowed: false });
+});
+
+app.post("/api/follows", (req, res) => {
+  res.json({ success: true });
+});
+
+app.delete("/api/follows/:id", (req, res) => {
+  res.json({ success: true });
+});
+
+app.get("/api/users/:id/stats", (req, res) => {
+  res.json({ followers: 120, articles: 5 });
+});
+
 app.post("/api/categories", adminAuthMiddleware, async (req, res) => {
   try {
     const id = "c_" + Date.now();
