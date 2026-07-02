@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trash2, FolderPlus, AlertTriangle, X, User, Image, Check, Save } from "lucide-react";
 import { MediaLibraryModal } from "../../components/MediaLibraryModal";
+import { apiFetch } from "../../lib/api";
 
 export function AdminSettings() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -47,7 +48,7 @@ export function AdminSettings() {
     setIsSavingProfile(true);
     setProfileMessage("");
 
-    fetch("/api/users/admin-1", {
+    apiFetch("/api/users/admin-1", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: adminName, avatar: adminAvatar })
@@ -68,7 +69,7 @@ export function AdminSettings() {
   const confirmDeleteCategory = () => {
     if (!deleteId) return;
     setIsDeleting(true);
-    fetch(`/api/categories/${deleteId}`, { method: "DELETE" })
+    apiFetch(`/api/categories/${deleteId}`, { method: "DELETE" })
       .then(() => {
         fetchCategories();
         setDeleteId(null);
@@ -84,7 +85,7 @@ export function AdminSettings() {
     e.preventDefault();
     if (!newCatName.trim()) return;
 
-    fetch("/api/categories", {
+    apiFetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: newCatName })

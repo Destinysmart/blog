@@ -4,6 +4,7 @@ import {
   Copy, Check, Calendar, HardDrive, Sparkles, Edit3, Save 
 } from "lucide-react";
 import { optimizeImage, seoFriendlyFilename } from "../lib/imageOptimizer";
+import { apiFetch } from "../lib/api";
 
 interface MediaItem {
   id: string;
@@ -95,7 +96,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
     setDetailsSavedMsg("");
 
     try {
-      const res = await fetch(`/api/media/${selectedItem.id}`, {
+      const res = await apiFetch(`/api/media/${selectedItem.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -126,7 +127,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
     }
 
     try {
-      const res = await fetch(`/api/media/${item.id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/media/${item.id}`, { method: "DELETE" });
       if (res.ok) {
         setMediaItems(prev => prev.filter(m => m.id !== item.id));
         if (selectedItem?.id === item.id) {
@@ -152,7 +153,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
         title: seoName.replace(".webp", "").replace(/-/g, " ")
       };
 
-      const res = await fetch("/api/media", {
+      const res = await apiFetch("/api/media", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

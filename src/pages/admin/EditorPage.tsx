@@ -16,6 +16,7 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
+import { apiFetch } from "../../lib/api";
 
 import {
   Save,
@@ -236,7 +237,7 @@ export function EditorPage() {
       const url = id && id !== "new" ? `/api/articles/${id}` : "/api/articles";
       const method = id && id !== "new" ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

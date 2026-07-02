@@ -15,6 +15,8 @@ import { AdminSettings } from "./pages/admin/AdminSettings";
 import { ArticlePage } from "./pages/ArticlePage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SignupPage } from "./pages/SignupPage";
+import { AdminLogin } from "./pages/admin/AdminLogin";
+import { AdminGuard } from "./components/AdminGuard";
 
 export default function App() {
   return (
@@ -29,14 +31,19 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/signup" element={<SignupPage />} />
           
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="articles" element={<AdminArticles />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="settings" element={<AdminSettings />} />
-            <Route path="editor" element={<EditorPage />} />
-            <Route path="editor/:id" element={<EditorPage />} />
+          {/* Admin Authentication Gate */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          
+          {/* Protected Admin Routes */}
+          <Route element={<AdminGuard />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="articles" element={<AdminArticles />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="settings" element={<AdminSettings />} />
+              <Route path="editor" element={<EditorPage />} />
+              <Route path="editor/:id" element={<EditorPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

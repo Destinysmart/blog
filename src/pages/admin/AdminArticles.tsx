@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Edit, Trash2, AlertTriangle, X } from "lucide-react";
+import { apiFetch } from "../../lib/api";
 
 export function AdminArticles() {
   const [articles, setArticles] = useState([]);
@@ -20,7 +21,7 @@ export function AdminArticles() {
   const confirmDelete = () => {
     if (!deleteId) return;
     setIsDeleting(true);
-    fetch(`/api/articles/${deleteId}`, { method: "DELETE" })
+    apiFetch(`/api/articles/${deleteId}`, { method: "DELETE" })
       .then(() => {
         fetchArticles();
         setDeleteId(null);
