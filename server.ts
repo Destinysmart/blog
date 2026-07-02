@@ -674,6 +674,7 @@ app.post("/api/media", adminAuthMiddleware, async (req, res) => {
       finalThumbnailUrl = finalUrl.replace("/upload/", "/upload/w_300,c_limit/");
     } else {
       // Fallback local WebP saving mechanism
+      if (process.env.VERCEL) { return res.status(500).json({ error: "Local image uploads are not persistent on Vercel. Please configure Cloudinary API keys in Vercel settings." }); }
       const ext = ".webp";
       let base = "";
       if (title) {
