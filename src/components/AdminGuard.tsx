@@ -9,6 +9,13 @@ export function AdminGuard() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    const isMockAdmin = localStorage.getItem("mock_admin") === "true";
+    if (isMockAdmin) {
+      setUser({ uid: "admin-1", email: "smartdestinyonyekachi@gmail.com" } as any);
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);

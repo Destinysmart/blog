@@ -65,10 +65,10 @@ export function AdminLayout() {
             Settings
           </NavLink>
           <div className="border-t border-gray-100 mt-2 pt-2">
-            <Link to="/" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-gray-900 font-semibold text-sm transition-colors">
+            <button onClick={() => { localStorage.removeItem("mock_admin"); window.location.href = "/"; }} className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-gray-900 font-semibold text-sm transition-colors">
               <LogOut className="h-5 w-5" />
               Exit to Site
-            </Link>
+            </button>
           </div>
         </div>
       )}
@@ -107,10 +107,10 @@ export function AdminLayout() {
         </nav>
         
         <div className="p-4 border-t border-gray-100">
-           <Link to="/" className="flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-gray-950 font-semibold text-sm transition-colors hover:bg-gray-50 rounded-xl">
+           <button onClick={() => { localStorage.removeItem("mock_admin"); window.location.href = "/"; }} className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-gray-950 font-semibold text-sm transition-colors hover:bg-gray-50 rounded-xl">
              <LogOut className="h-5 w-5" />
              Exit to Site
-           </Link>
+           </button>
         </div>
       </aside>
 

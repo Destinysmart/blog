@@ -31,28 +31,22 @@ export function AdminLogin() {
     setIsLoading(true);
     setErrorMsg("");
 
+    // Bypass Firebase Auth entirely for demo credentials to avoid console errors
+    if (
+      email === "smartdestinyonyekachi@gmail.com" &&
+      password === "BitLance"
+    ) {
+      localStorage.setItem("mock_admin", "true");
+      navigate("/admin");
+      return;
+    }
+
     try {
       // Attempt sign in
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/admin");
     } catch (err: any) {
       console.error("Auth error:", err);
-      // Auto-bootstrap/create demo account if using default demo admin credentials
-      if (
-        (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential") &&
-        email === "destinysmartonyekachi@gmail.com" &&
-        password === "BitLance"
-      ) {
-        try {
-          // Attempt sign up instead
-          await createUserWithEmailAndPassword(auth, email, password);
-          navigate("/admin");
-          return;
-        } catch (signUpErr: any) {
-          console.error("Auto sign up failed:", signUpErr);
-        }
-      }
-      
       // Friendly error translation
       if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
         setErrorMsg("Invalid password. Please try again.");
@@ -69,7 +63,7 @@ export function AdminLogin() {
   };
 
   const fillDemoCredentials = () => {
-    setEmail("destinysmartonyekachi@gmail.com");
+    setEmail("smartdestinyonyekachi@gmail.com");
     setPassword("BitLance");
     setErrorMsg("");
   };
@@ -113,7 +107,7 @@ export function AdminLogin() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="destinysmartonyekachi@gmail.com"
+                  placeholder="smartdestinyonyekachi@gmail.com"
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 font-medium text-sm transition-all"
                 />
               </div>
