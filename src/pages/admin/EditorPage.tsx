@@ -242,11 +242,15 @@ export function EditorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      await res.json();
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save article");
+      }
       setSaving(false);
       navigate("/admin/articles");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert(e.message);
       setSaving(false);
     }
   };

@@ -8,8 +8,9 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, limit } from "firebase/firestore";
 import { v2 as cloudinary } from "cloudinary";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const isESM = typeof import.meta !== "undefined" && typeof (import.meta as any).url !== "undefined";
+const __filename = isESM ? fileURLToPath((import.meta as any).url) : "";
+const __dirname = isESM ? path.dirname(__filename) : process.cwd();
 
 const PORT = 3000;
 
@@ -77,9 +78,13 @@ if (
 }
 
 // Ensure local uploads directory exists
-const UPLOADS_DIR = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+const UPLOADS_DIR = process.env.VERCEL ? path.join("/tmp", "uploads") : path.join(process.cwd(), "uploads");
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+} catch (e) {
+  console.warn("Could not create uploads directory, filesystem might be read-only:", e);
 }
 
 // ---------------------------------------------------------------------------
@@ -698,7 +703,15 @@ app.post("/api/media", adminAuthMiddleware, async (req, res) => {
 
       const base64Data = file.replace(/^data:image\/\w+;base64,/, "");
       const buffer = Buffer.from(base64Data, "base64");
-      fs.writeFileSync(filePath, buffer);
+      
+      try {
+        fs.writeFileSync(filePath, buffer);
+      } catch (err) {
+        if (process.env.VERCEL) {
+          return res.status(500).json({ error: "Local image uploads are not persistent on Vercel. Please configure Cloudinary environment variables." });
+        }
+        throw err;
+      }
 
       finalUrl = `/uploads/${finalFilename}`;
       finalThumbnailUrl = finalUrl;
@@ -707,7 +720,9 @@ app.post("/api/media", adminAuthMiddleware, async (req, res) => {
         const thumbFilename = `thumb-${finalFilename}`;
         const thumbBase64Data = thumbnail.replace(/^data:image\/\w+;base64,/, "");
         const thumbBuffer = Buffer.from(thumbBase64Data, "base64");
-        fs.writeFileSync(path.join(UPLOADS_DIR, thumbFilename), thumbBuffer);
+        try {
+          fs.writeFileSync(path.join(UPLOADS_DIR, thumbFilename), thumbBuffer);
+        } catch (_) {}
         finalThumbnailUrl = `/uploads/${thumbFilename}`;
       }
     }

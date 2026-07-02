@@ -536,8 +536,9 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                   <div className="pt-6 border-t border-gray-150 flex flex-col gap-2">
                     <button
                       type="button"
-                      onClick={() => onSelect(selectedItem)}
-                      className="w-full bg-gray-900 hover:bg-gray-950 text-white py-2.5 rounded-xl font-bold text-xs shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                      disabled={!selectedItem}
+                      onClick={() => selectedItem && onSelect(selectedItem)}
+                      className="w-full bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-950 text-white py-2.5 rounded-xl font-bold text-xs shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       Select Image
                     </button>
