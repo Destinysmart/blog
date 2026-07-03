@@ -9,8 +9,8 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateD
 import { v2 as cloudinary } from "cloudinary";
 
 const isESM = false;
-const __filename = "";
-const __dirname = process.cwd();
+
+const appDir = process.cwd();
 
 const PORT = 3000;
 
@@ -18,9 +18,9 @@ const PORT = 3000;
 let DB_FILE = path.join(process.cwd(), "db.json");
 const possiblePaths = [
   path.join(process.cwd(), "db.json"),
-  path.join(__dirname, "db.json"),
-  path.join(__dirname, "../db.json"),
-  path.join(__dirname, "..", "db.json")
+  path.join(appDir, "db.json"),
+  path.join(appDir, "../db.json"),
+  path.join(appDir, "..", "db.json")
 ];
 
 for (const p of possiblePaths) {
@@ -161,7 +161,7 @@ async function seedFirestoreIfNeeded() {
 }
 
 // Trigger initial seed check on load
-seedFirestoreIfNeeded();
+// seedFirestoreIfNeeded();
 
 // ---------------------------------------------------------------------------
 // Security: Firebase Auth Token Verification Middleware
