@@ -2,15 +2,15 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { createServer as createViteServer } from "vite";
+// import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, limit } from "firebase/firestore";
 import { v2 as cloudinary } from "cloudinary";
 
-const isESM = typeof import.meta !== "undefined" && typeof (import.meta as any).url !== "undefined";
-const __filename = isESM ? fileURLToPath((import.meta as any).url) : "";
-const __dirname = isESM ? path.dirname(__filename) : process.cwd();
+const isESM = false;
+const __filename = "";
+const __dirname = process.cwd();
 
 const PORT = 3000;
 
@@ -1022,6 +1022,7 @@ let vite: any = null;
 if (!process.env.VERCEL) {
   const runLocal = async () => {
     if (process.env.NODE_ENV !== "production") {
+      const { createServer: createViteServer } = await import("vite");
       vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "custom",

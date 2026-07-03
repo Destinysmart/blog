@@ -17,12 +17,14 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { SignupPage } from "./pages/SignupPage";
 import { AdminLogin } from "./pages/admin/AdminLogin";
 import { AdminGuard } from "./components/AdminGuard";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 export default function App() {
   return (
     <HelmetProvider>
-      <BrowserRouter>
-        <Routes>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/category/:categorySlug" element={<HomePage />} />
           <Route path="/topic/:topicSlug" element={<HomePage />} />
@@ -47,6 +49,7 @@ export default function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+      </ErrorBoundary>
     </HelmetProvider>
   );
 }
