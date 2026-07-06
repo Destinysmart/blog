@@ -326,6 +326,15 @@ export function HomePage() {
               </button>
               {openDropdown === "topics" && (
                 <div className="absolute left-0 mt-1.5 w-64 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50 animate-fade-in max-h-80 overflow-y-auto scrollbar-thin">
+                  <button
+                    onClick={() => {
+                      navigate("/");
+                      setOpenDropdown(null);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 hover:text-brand-600 font-extrabold text-xs uppercase tracking-wider cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-brand-500 shrink-0" /> All Topics
+                  </button>
                   {topics.map((t) => (
                     <button
                       key={t.id}
@@ -365,6 +374,15 @@ export function HomePage() {
               </button>
               {openDropdown === "featured" && (
                 <div className="absolute left-0 mt-1.5 w-60 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50 animate-fade-in max-h-80 overflow-y-auto scrollbar-thin">
+                  <button
+                    onClick={() => {
+                      navigate("/");
+                      setOpenDropdown(null);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 hover:text-brand-600 font-extrabold text-xs uppercase tracking-wider cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-brand-500 shrink-0" /> All Featured
+                  </button>
                   {featuredCollections.map((f) => (
                     <button
                       key={f.id}

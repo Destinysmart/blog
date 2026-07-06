@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 // import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, limit } from "firebase/firestore";
+import { initializeFirestore, getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, limit } from "firebase/firestore";
 import { v2 as cloudinary } from "cloudinary";
 
 const isESM = false;
@@ -45,7 +45,9 @@ const firebaseConfig = {
 };
 
 const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(firebaseApp, "ai-studio-bitlanceblog-e2b755df-755d-4852-a4bc-0220907937fb");
+const db = initializeFirestore(firebaseApp, {
+  experimentalForceLongPolling: true,
+}, "ai-studio-bitlanceblog-e2b755df-755d-4852-a4bc-0220907937fb");
 
 const articlesCol = () => collection(db, "articles");
 const draftsCol = () => collection(db, "drafts");
@@ -508,11 +510,33 @@ app.get("/api/categories", async (req, res) => {
 });
 
 app.get("/api/topics", async (req, res) => {
-  res.json([]);
+  try {
+    const qPub = query(articlesCol(), where("status", "==", "published"));
+    const snapPub = await getDocs(qPub);
+    const tagsSet = new Set<string>();
+    snapPub.forEach(doc => {
+      const data = doc.data();
+      if (data.tags && Array.isArray(data.tags)) {
+        data.tags.forEach((tag: string) => tagsSet.add(tag));
+      }
+    });
+    const topics = Array.from(tagsSet).map(tag => ({
+      id: "t_" + tag.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      name: tag,
+      slug: tag.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+    }));
+    res.json(topics);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get("/api/featured-collections", async (req, res) => {
-  res.json([]);
+  res.json([
+    { id: "fc1", name: "Editor's Picks", slug: "editors-picks" },
+    { id: "fc2", name: "Getting Started", slug: "getting-started" },
+    { id: "fc3", name: "Freelance Tips", slug: "freelance-tips" }
+  ]);
 });
 
 app.get("/api/bookmarks/check/:id", (req, res) => {
