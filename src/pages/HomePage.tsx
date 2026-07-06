@@ -115,15 +115,21 @@ export function HomePage() {
     fetch("/api/articles?status=published")
       .then((r) => r.json())
       .then((data) => {
+        if (!Array.isArray(data)) {
+          console.error("API did not return an array:", data);
+          return;
+        }
         // Sort articles by date descending
-        const sorted = data.sort(
-          (a: any, b: any) =>
-            new Date(b.published_at || b.created_at).getTime() -
-            new Date(a.published_at || a.created_at).getTime(),
+        const sorted = [...data].sort(
+          (a: any, b: any) => {
+            const timeA = new Date(a.published_at || a.created_at || 0).getTime();
+            const timeB = new Date(b.published_at || b.created_at || 0).getTime();
+            return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+          }
         );
         setArticles(sorted);
       })
-      .catch(console.error);
+      .catch((err) => console.error("Error fetching articles:", err));
   }, []);
 
   // Outside click handler for dropdowns

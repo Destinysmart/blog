@@ -534,8 +534,9 @@ app.get("/api/topics", async (req, res) => {
 app.get("/api/featured-collections", async (req, res) => {
   res.json([
     { id: "fc1", name: "Editor's Picks", slug: "editors-picks" },
-    { id: "fc2", name: "Getting Started", slug: "getting-started" },
-    { id: "fc3", name: "Freelance Tips", slug: "freelance-tips" }
+    { id: "fc2", name: "Trending", slug: "trending" },
+    { id: "fc3", name: "Beginner Friendly", slug: "beginner-friendly" },
+    { id: "fc4", name: "Recently Updated", slug: "recently-updated" }
   ]);
 });
 
