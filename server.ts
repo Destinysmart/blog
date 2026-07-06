@@ -1047,7 +1047,8 @@ let vite: any = null;
 if (!process.env.VERCEL) {
   const runLocal = async () => {
     if (process.env.NODE_ENV !== "production") {
-      const { createServer: createViteServer } = await import("vi" + "te");
+      const viteModule = await Function('return import("vite")')();
+      const createViteServer = viteModule.createServer;
       vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "custom",
