@@ -279,64 +279,510 @@ async function uniqueSlugInFirestore(baseSlug: string, excludeId?: string): Prom
   return slug;
 }
 
-// XML Sitemap Integration supporting both main and blog domains
+// Helper to strip HTML tags and convert formatting for plain-text or Markdown snippets
+function cleanHtmlToMarkdown(html: string): string {
+  if (!html) return "";
+  let text = html;
+  
+  // Replace list items with bullet points
+  text = text.replace(/<li>(.*?)<\/li>/gi, "- $1\n");
+  
+  // Replace headers with markdown equivalent
+  text = text.replace(/<h1>(.*?)<\/h1>/gi, "# $1\n\n");
+  text = text.replace(/<h2>(.*?)<\/h2>/gi, "## $1\n\n");
+  text = text.replace(/<h3>(.*?)<\/h3>/gi, "### $1\n\n");
+  text = text.replace(/<h4>(.*?)<\/h4>/gi, "#### $1\n\n");
+  
+  // Replace paragraphs and line breaks
+  text = text.replace(/<p>(.*?)<\/p>/gi, "$1\n\n");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  
+  // Strip any remaining HTML tags
+  text = text.replace(/<[^>]+>/g, "");
+  
+  // Clean up excess whitespace and entities
+  text = text.replace(/&amp;/g, "&");
+  text = text.replace(/&lt;/g, "<");
+  text = text.replace(/&gt;/g, ">");
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+  text = text.replace(/&nbsp;/g, " ");
+  
+  return text.trim();
+}
+
+// Convert any date to RFC822 format (e.g. Thu, 10 Jul 2026 10:49:45 GMT) for RSS feeds
+function toRFC822(dateVal: any): string {
+  const d = new Date(dateVal || Date.now());
+  return d.toUTCString();
+}
+
+// Fetch helper mapping functions for SEO/Feeds
+async function getCategoriesMap() {
+  const map = new Map<string, any>();
+  try {
+    const snap = await getDocs(categoriesCol());
+    snap.forEach(d => {
+      map.set(d.id, d.data());
+    });
+  } catch (err) {
+    console.error("Error fetching categories for feeds:", err);
+  }
+  return map;
+}
+
+async function getAuthorsMap() {
+  const map = new Map<string, any>();
+  try {
+    const snap = await getDocs(authorsCol());
+    snap.forEach(d => {
+      map.set(d.id, d.data());
+    });
+    // Fallback users
+    const snapUsers = await getDocs(usersCol());
+    snapUsers.forEach(d => {
+      if (!map.has(d.id)) {
+        map.set(d.id, d.data());
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching authors for feeds:", err);
+  }
+  return map;
+}
+
+// XML Sitemap Integration supporting both main and blog domains with Image tags and rich category/article mapping
 app.get("/sitemap.xml", async (req, res) => {
-  const host = (req.headers.host || "").toLowerCase();
-  const siteQuery = req.query.site as string;
-  
-  const isBlog = host.includes("blog.") || siteQuery === "blog";
-  
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-  
-  if (isBlog) {
+  try {
+    const host = (req.headers.host || "").toLowerCase();
+    const siteQuery = req.query.site as string;
+    const isBlog = host.includes("blog.") || siteQuery === "blog";
+    
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const baseUrl = `${protocol}://${req.headers.host || "blog.bitlance.work"}`;
+    
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n`;
+    
+    // Fetch Articles & Categories
     const snap = await getDocs(articlesCol());
     const articles: any[] = [];
     snap.forEach(d => {
-      articles.push(d.data());
+      articles.push({ id: d.id, ...d.data() });
     });
     
-    // Blog Base
+    articles.sort((a, b) => {
+      const dateA = new Date(a.published_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.published_at || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+    
+    const catsMap = await getCategoriesMap();
+    
+    // Base site URL
     xml += `  <url>\n`;
-    xml += `    <loc>https://blog.bitlance.work/</loc>\n`;
+    xml += `    <loc>${baseUrl}/</loc>\n`;
     xml += `    <changefreq>daily</changefreq>\n`;
     xml += `    <priority>1.0</priority>\n`;
+    xml += `  </url>\n`;
+
+    // Standard Pages (Profile, Signup)
+    xml += `  <url>\n`;
+    xml += `    <loc>${baseUrl}/signup</loc>\n`;
+    xml += `    <changefreq>monthly</changefreq>\n`;
+    xml += `    <priority>0.5</priority>\n`;
     xml += `  </url>\n`;
     
-    // Blog Articles
+    xml += `  <url>\n`;
+    xml += `    <loc>${baseUrl}/profile</loc>\n`;
+    xml += `    <changefreq>monthly</changefreq>\n`;
+    xml += `    <priority>0.5</priority>\n`;
+    xml += `  </url>\n`;
+    
+    // Categories Sitemaps
+    for (const cat of catsMap.values()) {
+      if (cat.slug || cat.id) {
+        xml += `  <url>\n`;
+        xml += `    <loc>${baseUrl}/category/${cat.slug || cat.id}</loc>\n`;
+        xml += `    <changefreq>daily</changefreq>\n`;
+        xml += `    <priority>0.7</priority>\n`;
+        xml += `  </url>\n`;
+      }
+    }
+    
+    // Article Sitemaps with image extensions
     for (const art of articles) {
+      const lastModDate = new Date(art.updated_at || art.published_at || art.created_at || Date.now()).toISOString().split("T")[0];
       xml += `  <url>\n`;
-      xml += `    <loc>https://blog.bitlance.work/article/${art.slug || art.id}</loc>\n`;
-      xml += `    <lastmod>${(art.updated_at || art.created_at || new Date().toISOString()).split("T")[0]}</lastmod>\n`;
+      xml += `    <loc>${baseUrl}/article/${art.slug || art.id}</loc>\n`;
+      xml += `    <lastmod>${lastModDate}</lastmod>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.8</priority>\n`;
+      
+      const imgUrl = art.featured_image || art.og_image;
+      if (imgUrl) {
+        xml += `    <image:image>\n`;
+        xml += `      <image:loc>${imgUrl.replace(/&/g, "&amp;")}</image:loc>\n`;
+        xml += `      <image:title>${(art.title || "BitLance Article").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</image:title>\n`;
+        xml += `    </image:image>\n`;
+      }
       xml += `  </url>\n`;
     }
-  } else {
-    // Main Platform Sitemap
-    xml += `  <url>\n`;
-    xml += `    <loc>https://bitlance.work/</loc>\n`;
-    xml += `    <changefreq>daily</changefreq>\n`;
-    xml += `    <priority>1.0</priority>\n`;
-    xml += `  </url>\n`;
+    
+    xml += `</urlset>`;
+    res.header("Content-Type", "application/xml");
+    res.send(xml);
+  } catch (err: any) {
+    res.status(500).send(`Error generating sitemap: ${err.message}`);
   }
-  
-  xml += `</urlset>`;
-  res.header("Content-Type", "application/xml");
-  res.send(xml);
 });
 
-// Robots.txt Handler
+// Robots.txt Handler with advanced AI/LLM Web Crawling specifications (AEO optimization)
 app.get("/robots.txt", (req, res) => {
   const host = (req.headers.host || "").toLowerCase();
-  let robotsText = "";
-  if (host.includes("blog.")) {
-    robotsText = `User-agent: *\nAllow: /\nSitemap: https://blog.bitlance.work/sitemap.xml`;
-  } else {
-    robotsText = `User-agent: *\nAllow: /\nSitemap: https://bitlance.work/sitemap.xml`;
+  const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+  const baseUrl = `${protocol}://${req.headers.host || "blog.bitlance.work"}`;
+  
+  let robotsText = `# BitLance Search & AI Crawler configuration\n\n`;
+  
+  // Target generic web-search crawlers
+  robotsText += `User-agent: *\n`;
+  robotsText += `Allow: /\n`;
+  robotsText += `Disallow: /admin/\n`;
+  robotsText += `Disallow: /api/\n\n`;
+  
+  // Target AI / LLM Scrapers explicitly for optimization & indexing
+  const aiBots = [
+    "GPTBot",          // OpenAI
+    "ChatGPT-User",    // ChatGPT Web Browsing
+    "ClaudeBot",       // Anthropic Claude
+    "Claude-Web",      // Anthropic web agent
+    "Google-Extended", // Gemini Training/SGE
+    "PerplexityBot",   // Perplexity AI
+    "Applebot-Extended"// Apple intelligence
+  ];
+  
+  for (const bot of aiBots) {
+    robotsText += `User-agent: ${bot}\n`;
+    robotsText += `Allow: /\n`;
+    robotsText += `Disallow: /admin/\n`;
+    robotsText += `Disallow: /api/\n\n`;
   }
+  
+  // Link to sitemaps & LLM information files
+  robotsText += `Sitemap: ${baseUrl}/sitemap.xml\n`;
+  robotsText += `LLMs-Agent-Information: ${baseUrl}/llms.txt\n`;
+  
   res.header("Content-Type", "text/plain");
   res.send(robotsText);
+});
+
+// Dynamic RSS Feed Route (RSS 2.0)
+app.get(["/feed.xml", "/rss.xml", "/feed"], async (req, res) => {
+  try {
+    const host = (req.headers.host || "").toLowerCase();
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const baseUrl = `${protocol}://${req.headers.host || "blog.bitlance.work"}`;
+    
+    const snap = await getDocs(articlesCol());
+    const articles: any[] = [];
+    snap.forEach(d => {
+      articles.push({ id: d.id, ...d.data() });
+    });
+    
+    articles.sort((a, b) => {
+      const dateA = new Date(a.published_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.published_at || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+    
+    const catsMap = await getCategoriesMap();
+    const authorsMap = await getAuthorsMap();
+    
+    let rss = `<?xml version="1.0" encoding="UTF-8" ?>\n`;
+    rss += `<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/" xmlns:media="http://search.yahoo.com/mrss/">\n`;
+    rss += `<channel>\n`;
+    rss += `  <title>BitLance Blog</title>\n`;
+    rss += `  <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml" />\n`;
+    rss += `  <link>${baseUrl}</link>\n`;
+    rss += `  <description>Guides, tutorials, industry insights, freelancing tips, and Bitcoin career resources from the team at BitLance.</description>\n`;
+    rss += `  <language>en-US</language>\n`;
+    rss += `  <lastBuildDate>${toRFC822(articles[0]?.published_at || articles[0]?.created_at)}</lastBuildDate>\n`;
+    rss += `  <sy:updatePeriod>hourly</sy:updatePeriod>\n`;
+    rss += `  <sy:updateFrequency>1</sy:updateFrequency>\n`;
+    
+    for (const art of articles) {
+      const artUrl = `${baseUrl}/article/${art.slug || art.id}`;
+      const authorObj = authorsMap.get(art.author_id);
+      const authorName = authorObj?.name || "BitLance Team";
+      const catObj = catsMap.get(art.category_id);
+      const catName = catObj?.name || "Bitcoin Freelancing";
+      const summary = art.meta_description || art.subtitle || (art.content ? cleanHtmlToMarkdown(art.content).substring(0, 160) + "..." : "");
+      
+      rss += `  <item>\n`;
+      rss += `    <title><![CDATA[${art.title}]]></title>\n`;
+      rss += `    <link>${artUrl}</link>\n`;
+      rss += `    <guid isPermaLink="true">${artUrl}</guid>\n`;
+      rss += `    <pubDate>${toRFC822(art.published_at || art.created_at)}</pubDate>\n`;
+      rss += `    <dc:creator><![CDATA[${authorName}]]></dc:creator>\n`;
+      rss += `    <category><![CDATA[${catName}]]></category>\n`;
+      rss += `    <description><![CDATA[${summary}]]></description>\n`;
+      
+      if (art.content) {
+        rss += `    <content:encoded><![CDATA[${art.content}]]></content:encoded>\n`;
+      }
+      
+      const imgUrl = art.featured_image || art.og_image;
+      if (imgUrl) {
+        rss += `    <media:content url="${imgUrl.replace(/&/g, "&amp;")}" medium="image" type="image/jpeg" />\n`;
+      }
+      rss += `  </item>\n`;
+    }
+    
+    rss += `</channel>\n`;
+    rss += `</rss>`;
+    
+    res.header("Content-Type", "application/xml; charset=utf-8");
+    res.send(rss);
+  } catch (err: any) {
+    res.status(500).send(`<error>${err.message}</error>`);
+  }
+});
+
+// Dynamic Atom Feed Route (Atom 1.0)
+app.get("/atom.xml", async (req, res) => {
+  try {
+    const host = (req.headers.host || "").toLowerCase();
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const baseUrl = `${protocol}://${req.headers.host || "blog.bitlance.work"}`;
+    
+    const snap = await getDocs(articlesCol());
+    const articles: any[] = [];
+    snap.forEach(d => {
+      articles.push({ id: d.id, ...d.data() });
+    });
+    
+    articles.sort((a, b) => {
+      const dateA = new Date(a.published_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.published_at || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+    
+    const catsMap = await getCategoriesMap();
+    const authorsMap = await getAuthorsMap();
+    
+    const updatedTime = articles[0] ? new Date(articles[0].published_at || articles[0].created_at || Date.now()).toISOString() : new Date().toISOString();
+    
+    let atom = `<?xml version="1.0" encoding="utf-8"?>\n`;
+    atom += `<feed xmlns="http://www.w3.org/2005/Atom">\n`;
+    atom += `  <title>BitLance Blog</title>\n`;
+    atom += `  <subtitle>Guides, tutorials, industry insights, freelancing tips, and Bitcoin career resources from the team at BitLance.</subtitle>\n`;
+    atom += `  <link href="${baseUrl}/atom.xml" rel="self" />\n`;
+    atom += `  <link href="${baseUrl}/" />\n`;
+    atom += `  <id>${baseUrl}/</id>\n`;
+    atom += `  <updated>${updatedTime}</updated>\n`;
+    atom += `  <author>\n`;
+    atom += `    <name>BitLance Team</name>\n`;
+    atom += `    <uri>${baseUrl}</uri>\n`;
+    atom += `  </author>\n`;
+    
+    for (const art of articles) {
+      const artUrl = `${baseUrl}/article/${art.slug || art.id}`;
+      const authorObj = authorsMap.get(art.author_id);
+      const authorName = authorObj?.name || "BitLance Team";
+      const summary = art.meta_description || art.subtitle || (art.content ? cleanHtmlToMarkdown(art.content).substring(0, 160) : "");
+      const publishedStr = new Date(art.published_at || art.created_at || Date.now()).toISOString();
+      const updatedStr = new Date(art.updated_at || art.published_at || art.created_at || Date.now()).toISOString();
+      
+      atom += `  <entry>\n`;
+      atom += `    <title><![CDATA[${art.title}]]></title>\n`;
+      atom += `    <link href="${artUrl}" />\n`;
+      atom += `    <id>${artUrl}</id>\n`;
+      atom += `    <published>${publishedStr}</published>\n`;
+      atom += `    <updated>${updatedStr}</updated>\n`;
+      atom += `    <author>\n`;
+      atom += `      <name>${authorName}</name>\n`;
+      atom += `    </author>\n`;
+      atom += `    <summary type="html"><![CDATA[${summary}]]></summary>\n`;
+      if (art.content) {
+        atom += `    <content type="html"><![CDATA[${art.content}]]></content>\n`;
+      }
+      atom += `  </entry>\n`;
+    }
+    
+    atom += `</feed>`;
+    
+    res.header("Content-Type", "application/atom+xml; charset=utf-8");
+    res.send(atom);
+  } catch (err: any) {
+    res.status(500).send(`<error>${err.message}</error>`);
+  }
+});
+
+// Dynamic JSON Feed Route
+app.get("/feed.json", async (req, res) => {
+  try {
+    const host = (req.headers.host || "").toLowerCase();
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const baseUrl = `${protocol}://${req.headers.host || "blog.bitlance.work"}`;
+    
+    const snap = await getDocs(articlesCol());
+    const articles: any[] = [];
+    snap.forEach(d => {
+      articles.push({ id: d.id, ...d.data() });
+    });
+    
+    articles.sort((a, b) => {
+      const dateA = new Date(a.published_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.published_at || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+    
+    const catsMap = await getCategoriesMap();
+    const authorsMap = await getAuthorsMap();
+    
+    const feedJson = {
+      version: "https://jsonfeed.org/version/1.1",
+      title: "BitLance Blog",
+      home_page_url: `${baseUrl}/`,
+      feed_url: `${baseUrl}/feed.json`,
+      description: "Guides, tutorials, industry insights, freelancing tips, and Bitcoin career resources from the team at BitLance.",
+      items: articles.map(art => {
+        const authorObj = authorsMap.get(art.author_id);
+        const catObj = catsMap.get(art.category_id);
+        return {
+          id: art.id,
+          url: `${baseUrl}/article/${art.slug || art.id}`,
+          title: art.title,
+          summary: art.meta_description || art.subtitle || undefined,
+          content_html: art.content || undefined,
+          image: art.featured_image || art.og_image || undefined,
+          date_published: art.published_at || art.created_at || undefined,
+          date_modified: art.updated_at || art.published_at || art.created_at || undefined,
+          authors: [{
+            name: authorObj?.name || "BitLance Team",
+            avatar: authorObj?.avatar || undefined
+          }],
+          tags: catObj?.name ? [catObj.name] : []
+        };
+      })
+    };
+    
+    res.json(feedJson);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Dynamic llms.txt AEO discovery endpoint
+app.get("/llms.txt", async (req, res) => {
+  try {
+    const host = (req.headers.host || "").toLowerCase();
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const baseUrl = `${protocol}://${req.headers.host || "blog.bitlance.work"}`;
+    
+    const snap = await getDocs(articlesCol());
+    const articles: any[] = [];
+    snap.forEach(d => {
+      articles.push({ id: d.id, ...d.data() });
+    });
+    
+    articles.sort((a, b) => {
+      const dateA = new Date(a.published_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.published_at || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+    
+    const catsMap = await getCategoriesMap();
+    
+    let md = `# BitLance Blog\n\n`;
+    md += `> Insights, remote work, career resources, and Bitcoin freelancing guides.\n\n`;
+    md += `BitLance is a vetted remote Bitcoin job marketplace and global micro-payroll platform. Secure freelancing is accomplished via Lightning Network smart contract escrows. This blog syndicates community guides, tech announcements, and design tutorials.\n\n`;
+    
+    md += `## Primary Pages\n`;
+    md += `- [Blog Home Page](${baseUrl}/) - Main article listing and filtering feed.\n`;
+    md += `- [Signup Page](${baseUrl}/signup) - Create a freelancing profile.\n`;
+    md += `- [User Profile](${baseUrl}/profile) - Manage your bookmark feeds and career profile.\n\n`;
+    
+    md += `## Featured Categories\n`;
+    for (const cat of catsMap.values()) {
+      md += `- [${cat.name}](${baseUrl}/category/${cat.slug || cat.id}) - Category resource listing for ${cat.name}.\n`;
+    }
+    md += `\n`;
+    
+    md += `## Published Articles\n`;
+    for (const art of articles) {
+      const summary = art.meta_description || art.subtitle || "Insights on Bitcoin development and freelance careers.";
+      md += `- [${art.title}](${baseUrl}/article/${art.slug || art.id}) - ${summary}\n`;
+    }
+    
+    md += `\n## LLM Crawler Directions\n`;
+    md += `To crawl and ingest the complete text of all blog articles in a single structured file, please load the full knowledge base at [llms-full.txt](${baseUrl}/llms-full.txt).\n`;
+    
+    res.header("Content-Type", "text/plain; charset=utf-8");
+    res.send(md);
+  } catch (err: any) {
+    res.status(500).send(`Error generating LLMs mapping: ${err.message}`);
+  }
+});
+
+// Dynamic llms-full.txt full knowledge base endpoint for LLM consumption
+app.get("/llms-full.txt", async (req, res) => {
+  try {
+    const host = (req.headers.host || "").toLowerCase();
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const baseUrl = `${protocol}://${req.headers.host || "blog.bitlance.work"}`;
+    
+    const snap = await getDocs(articlesCol());
+    const articles: any[] = [];
+    snap.forEach(d => {
+      articles.push({ id: d.id, ...d.data() });
+    });
+    
+    articles.sort((a, b) => {
+      const dateA = new Date(a.published_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.published_at || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+    
+    const catsMap = await getCategoriesMap();
+    const authorsMap = await getAuthorsMap();
+    
+    let md = `# BitLance Blog Full Knowledge Base\n`;
+    md += `This document contains the complete corpus of all published articles on the BitLance Blog, optimized for LLM indexing, retrieval-augmented generation (RAG), and search agents.\n\n`;
+    md += `---\n\n`;
+    
+    for (const art of articles) {
+      const authorObj = authorsMap.get(art.author_id);
+      const authorName = authorObj?.name || "BitLance Team";
+      const catObj = catsMap.get(art.category_id);
+      const catName = catObj?.name || "Uncategorized";
+      const pubDate = new Date(art.published_at || art.created_at || Date.now()).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' });
+      const textBody = cleanHtmlToMarkdown(art.content || "");
+      
+      md += `# ${art.title}\n`;
+      md += `- **URL**: ${baseUrl}/article/${art.slug || art.id}\n`;
+      md += `- **Published Date**: ${pubDate}\n`;
+      md += `- **Category**: ${catName}\n`;
+      md += `- **Author**: ${authorName}\n`;
+      
+      if (art.subtitle) {
+        md += `- **Subtitle**: ${art.subtitle}\n`;
+      }
+      if (art.meta_description) {
+        md += `- **Description**: ${art.meta_description}\n`;
+      }
+      
+      md += `\n## Content\n\n`;
+      md += `${textBody}\n\n`;
+      md += `---\n\n`;
+    }
+    
+    res.header("Content-Type", "text/plain; charset=utf-8");
+    res.send(md);
+  } catch (err: any) {
+    res.status(500).send(`Error generating LLMs content: ${err.message}`);
+  }
 });
 
 // ---------------------------------------------------------------------------

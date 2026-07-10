@@ -20,6 +20,8 @@ import {
   Flame,
   BookOpen,
   Award,
+  Search,
+  X,
 } from "lucide-react";
 
 // Structured FAQ list targeting high-intent inquiries for SEO & AI Overviews
@@ -139,6 +141,13 @@ export function HomePage() {
     return () => document.removeEventListener("click", handleOutsideClick);
   }, []);
 
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+
+  // Sync searchQuery when URL query param changes (e.g. from nav search or sidebar search)
+  useEffect(() => {
+    setSearchQuery(searchParams.get("search") || "");
+  }, [searchParams]);
+
   const finalCategorySlug = categorySlug || searchParams.get("category");
   const finalTopicSlug = topicSlug || searchParams.get("topic");
   const finalFeaturedSlug = featuredSlug || searchParams.get("featured");
@@ -153,10 +162,10 @@ export function HomePage() {
     if (activeCategoryObj && article.category_id !== activeCategoryObj.id) {
       return false;
     }
-    // 2. Filter by topic
-    if (activeTopicObj) {
-      const topicNameLower = activeTopicObj.name.toLowerCase();
-      const hasTag = article.tags?.some((t: string) => t.toLowerCase() === topicNameLower);
+    // 2. Filter by topic (with robust slug fallback for any user-clicked tag badge)
+    if (finalTopicSlug) {
+      const topicNameLower = activeTopicObj ? activeTopicObj.name.toLowerCase() : finalTopicSlug.toLowerCase().replace(/-/g, " ");
+      const hasTag = article.tags?.some((t: string) => t.toLowerCase() === topicNameLower || t.toLowerCase().replace(/\s+/g, "-") === finalTopicSlug.toLowerCase());
       const inTitle = article.title?.toLowerCase().includes(topicNameLower);
       const inSubtitle = article.subtitle?.toLowerCase().includes(topicNameLower);
       if (!hasTag && !inTitle && !inSubtitle) {
@@ -180,6 +189,23 @@ export function HomePage() {
       }
       if (fSlug === "recently-updated") {
         return !!article.updated_at;
+      }
+    }
+    // 4. Dynamic Live Search Query Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const title = (article.title || "").toLowerCase();
+      const subtitle = (article.subtitle || "").toLowerCase();
+      const content = (article.content || "").toLowerCase();
+      const tags = Array.isArray(article.tags) ? article.tags.map(t => String(t).toLowerCase()) : [];
+      
+      const inTags = tags.some(t => t.includes(q));
+      const inTitle = title.includes(q);
+      const inSubtitle = subtitle.includes(q);
+      const inContent = content.includes(q);
+      
+      if (!inTags && !inTitle && !inSubtitle && !inContent) {
+        return false;
       }
     }
     return true;
@@ -435,11 +461,48 @@ export function HomePage() {
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-950 tracking-tight mb-3 sm:mb-4 animate-fade-in">
             Bitlance Blog
           </h2>
-          <p className="text-sm sm:text-lg lg:text-xl text-gray-500 leading-relaxed font-light">
+          <p className="text-sm sm:text-lg lg:text-xl text-gray-500 leading-relaxed font-light mb-6 sm:mb-8">
             Read updates on Bitlance's products, borderless work initiatives,
             and Bitcoin partnerships to get insight into the world's
             decentralized work marketplace.
           </p>
+
+          {/* Interactive Search Box Widget with Dynamic Result Counters */}
+          <div className="max-w-xl relative flex items-center mb-3">
+            <Search className="absolute left-4 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by keyword, topic, or tags (e.g. 'lightning', 'tutorials')..."
+              value={searchQuery}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearchQuery(val);
+                // Dynamically update the search param in the URL to make searches shareable and bookmarkable!
+                if (val.trim()) {
+                  navigate(`/?search=${encodeURIComponent(val)}`, { replace: true });
+                } else {
+                  navigate("/", { replace: true });
+                }
+              }}
+              className="w-full bg-gray-50 hover:bg-gray-100/50 focus:bg-white border border-gray-250 focus:border-brand-500 rounded-2xl pl-12 pr-10 py-3.5 text-sm font-semibold text-gray-950 placeholder:text-gray-400 outline-none transition-all focus:ring-4 focus:ring-brand-500/10 shadow-3xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  navigate("/", { replace: true });
+                }}
+                className="absolute right-3.5 p-1.5 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="text-xs text-brand-600 font-bold animate-fade-in pl-1">
+              Found {filteredArticles.length} matching article{filteredArticles.length !== 1 ? 's' : ''}
+            </p>
+          )}
         </div>
 
         {/* Dynamic Category Horizontal Tabs */}
@@ -486,71 +549,97 @@ export function HomePage() {
         </div>
 
         {/* Hero / Featured Article Layout */}
-        {featured && (
-          <div className="mb-20 lg:mb-28 group">
-            <Link
-              to={`/article/${featured.slug || featured.id}`}
-              className="block"
-            >
-              <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
-                <div className="lg:col-span-5 order-2 lg:order-1 animate-fade-in">
-                  <div className="text-brand-600 text-xs font-bold uppercase tracking-wider mb-3">
-                    {getCategoryName(featured.category_id)}
-                  </div>
-                  <h2 className="text-xl sm:text-4xl lg:text-5xl font-extrabold text-gray-950 leading-tight mb-3 sm:mb-5 group-hover:text-brand-500 transition-colors">
-                    {featured.title}
-                  </h2>
-                  <p className="text-gray-500 text-xs sm:text-base leading-relaxed mb-4 sm:mb-6 line-clamp-3 font-medium">
-                    {featured.subtitle ||
-                      featured.content
-                        ?.replace(/<[^>]+>/g, "")
-                        .substring(0, 180)}
-                    ...
-                  </p>
-                  
-                  {/* Premium Author / Reading Time Row */}
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={getAuthor(featured.author_id).avatar}
-                      alt={getAuthor(featured.author_id).name}
-                      className="w-10 h-10 rounded-full border border-gray-100 shadow-sm object-cover"
-                    />
-                    <div>
-                      <p className="text-xs font-bold text-gray-950">
-                        {getAuthor(featured.author_id).name}
+        {filteredArticles.length === 0 ? (
+          <div className="text-center py-20 px-4 max-w-lg mx-auto bg-gray-50/50 border border-gray-100 rounded-[2.5rem] my-12 animate-fade-in shadow-3xs">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Search className="w-8 h-8 text-gray-400 animate-pulse" />
+            </div>
+            <h3 className="text-xl font-extrabold text-gray-950 mb-3">No matching articles found</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-8">
+              We couldn't find any articles matching "<span className="font-bold text-gray-700">{searchQuery}</span>". Try searching for high-intent terms or exploring topics below.
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {["Lightning", "Tutorials", "Bitcoin", "Freelancing"].map((term) => (
+                <button
+                  key={term}
+                  onClick={() => {
+                    setSearchQuery(term);
+                    navigate(`/?search=${encodeURIComponent(term)}`, { replace: true });
+                  }}
+                  className="px-3.5 py-1.5 rounded-full bg-white border border-gray-150 hover:border-brand-200 text-xs font-bold text-gray-600 hover:text-brand-700 transition-colors cursor-pointer shadow-3xs"
+                >
+                  #{term}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {featured && (
+              <div className="mb-20 lg:mb-28 group">
+                <Link
+                  to={`/article/${featured.slug || featured.id}`}
+                  className="block"
+                >
+                  <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+                    <div className="lg:col-span-5 order-2 lg:order-1 animate-fade-in">
+                      <div className="text-brand-600 text-xs font-bold uppercase tracking-wider mb-3">
+                        {getCategoryName(featured.category_id)}
+                      </div>
+                      <h2 className="text-xl sm:text-4xl lg:text-5xl font-extrabold text-gray-950 leading-tight mb-3 sm:mb-5 group-hover:text-brand-500 transition-colors">
+                        {featured.title}
+                      </h2>
+                      <p className="text-gray-500 text-xs sm:text-base leading-relaxed mb-4 sm:mb-6 line-clamp-3 font-medium">
+                        {featured.subtitle ||
+                          featured.content
+                            ?.replace(/<[^>]+>/g, "")
+                            .substring(0, 180)}
+                        ...
                       </p>
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-400 mt-0.5">
-                        <span>
-                          {new Date(
-                            featured.published_at || featured.created_at,
-                          ).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </span>
-                        <span>•</span>
-                        <span>{getReadingTime(featured)}</span>
+                      
+                      {/* Premium Author / Reading Time Row */}
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={getAuthor(featured.author_id).avatar}
+                          alt={getAuthor(featured.author_id).name}
+                          className="w-10 h-10 rounded-full border border-gray-100 shadow-sm object-cover"
+                        />
+                        <div>
+                          <p className="text-xs font-bold text-gray-950">
+                            {getAuthor(featured.author_id).name}
+                          </p>
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-400 mt-0.5">
+                            <span>
+                              {new Date(
+                                featured.published_at || featured.created_at,
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </span>
+                            <span>•</span>
+                            <span>{getReadingTime(featured)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="lg:col-span-7 order-1 lg:order-2">
+                      <div className="aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] rounded-[2.5rem] overflow-hidden bg-gray-50 border border-gray-100 shadow-sm transition-shadow duration-300 group-hover:shadow-md">
+                        <img
+                          src={
+                            featured.featured_image ||
+                            "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2670&auto=format&fit=crop"
+                          }
+                          alt={featured.title}
+                          className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-700 ease-out"
+                        />
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="lg:col-span-7 order-1 lg:order-2">
-                  <div className="aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] rounded-[2.5rem] overflow-hidden bg-gray-50 border border-gray-100 shadow-sm transition-shadow duration-300 group-hover:shadow-md">
-                    <img
-                      src={
-                        featured.featured_image ||
-                        "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2670&auto=format&fit=crop"
-                      }
-                      alt={featured.title}
-                      className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-700 ease-out"
-                    />
-                  </div>
-                </div>
+                </Link>
               </div>
-            </Link>
-          </div>
-        )}
+            )}
 
         {/* Main 3-Column Articles Grid */}
         {displayedArticles.length > 0 && (
@@ -651,6 +740,8 @@ export function HomePage() {
             )}
           </div>
         )}
+      </>
+    )}
 
         {/* Section Heading: Trending & Recommended Reading */}
         <div className="bg-gray-50/50 rounded-[2.5rem] border border-gray-100 p-8 sm:p-12 mb-20 lg:mb-28">

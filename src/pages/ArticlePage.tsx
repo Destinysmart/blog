@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Share2,
@@ -8,6 +8,9 @@ import {
   UserCheck,
   FileText,
   Users,
+  ChevronLeft,
+  ChevronRight,
+  Search,
 } from "lucide-react";
 import { Navigation } from "../components/Navigation";
 import { Footer } from "../components/Footer";
@@ -16,6 +19,7 @@ import { Breadcrumbs } from "../components/Breadcrumbs";
 
 export function ArticlePage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [article, setArticle] = useState<any>(null);
   const [author, setAuthor] = useState<any>(null);
   const [authorStats, setAuthorStats] = useState({
@@ -29,10 +33,17 @@ export function ArticlePage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [relatedArticles, setRelatedArticles] = useState<any[]>([]);
+  const [prevArticle, setPrevArticle] = useState<any>(null);
+  const [nextArticle, setNextArticle] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  // Smooth scroll to top on article navigation
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [slug]);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -59,13 +70,47 @@ export function ArticlePage() {
     fetch("/api/articles?status=published")
       .then((r) => r.json())
       .then((data) => {
+        // Compute related articles using a tag-based and category-based recommendation algorithm
         const others = data.filter((a: any) => a.id !== article.id);
-        const sorted = others.sort((a: any, b: any) => {
-          if (a.category_id === article.category_id && b.category_id !== article.category_id) return -1;
-          if (a.category_id !== article.category_id && b.category_id === article.category_id) return 1;
-          return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
+        const articlesWithScores = others.map((other: any) => {
+          let score = 0;
+          // Same category gets a high score boost
+          if (other.category_id === article.category_id) score += 15;
+          // Same author gets a small score boost
+          if (other.author_id === article.author_id) score += 3;
+          
+          // Shared tags boost relevance significantly
+          if (Array.isArray(article.tags) && Array.isArray(other.tags)) {
+            const currentTags = new Set(article.tags.map((t: string) => t.toLowerCase().trim()));
+            other.tags.forEach((t: string) => {
+              if (currentTags.has(t.toLowerCase().trim())) {
+                score += 8;
+              }
+            });
+          }
+          return { article: other, score };
         });
-        setRelatedArticles(sorted.slice(0, 3));
+
+        // Sort by matching score descending, then by date descending
+        const sortedRelated = [...articlesWithScores]
+          .sort((a: any, b: any) => {
+            if (b.score !== a.score) return b.score - a.score;
+            return new Date(b.article.published_at || b.article.created_at).getTime() - new Date(a.article.published_at || a.article.created_at).getTime();
+          })
+          .map((item: any) => item.article);
+          
+        setRelatedArticles(sortedRelated.slice(0, 3));
+
+        // Compute chronological next and previous articles for fluid sequential navigation
+        const chronologicalList = [...data].sort((a: any, b: any) => {
+          return new Date(a.published_at || a.created_at).getTime() - new Date(b.published_at || b.created_at).getTime();
+        });
+        
+        const currentIndex = chronologicalList.findIndex((a: any) => a.id === article.id);
+        if (currentIndex !== -1) {
+          setPrevArticle(currentIndex > 0 ? chronologicalList[currentIndex - 1] : null);
+          setNextArticle(currentIndex < chronologicalList.length - 1 ? chronologicalList[currentIndex + 1] : null);
+        }
       })
       .catch(console.error);
   }, [article]);
@@ -228,6 +273,34 @@ export function ArticlePage() {
       </div>
     );
 
+  const getInjectedContent = () => {
+    if (!article || !article.content) return "";
+    const html = article.content;
+    const recommendation = relatedArticles[0] || null;
+    if (!recommendation) return html;
+    
+    const paragraphs = html.split("</p>");
+    if (paragraphs.length < 3) return html;
+    
+    const cardHtml = `
+      <div class="my-8 p-6 bg-[#FFFBF7] border border-brand-100 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 not-prose hover:bg-[#FFFBF7]/80 transition-all shadow-sm">
+        <div class="flex items-center gap-3">
+          <span class="p-3 bg-brand-50 text-brand-600 rounded-2xl shrink-0 border border-brand-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </span>
+          <div class="text-left">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 block mb-0.5">Recommended Reading</span>
+            <a href="/article/${recommendation.slug || recommendation.id}" class="text-sm sm:text-base font-extrabold text-gray-950 hover:text-brand-600 transition-colors">${recommendation.title}</a>
+          </div>
+        </div>
+        <a href="/article/${recommendation.slug || recommendation.id}" class="inline-flex items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-xs shrink-0 self-stretch sm:self-auto text-center">Read Now</a>
+      </div>
+    `;
+    
+    paragraphs[1] = paragraphs[1] + "</p>" + cardHtml;
+    return paragraphs.join("</p>");
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <SEO
@@ -329,6 +402,29 @@ export function ArticlePage() {
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 relative">
           {/* Left Sidebar (Desktop) - TOC & Socials */}
           <div className="hidden lg:flex flex-col gap-12 sticky top-32 h-[calc(100vh-8rem)] overflow-y-auto pb-8 shrink-0 w-64 pr-4">
+            {/* Search Blog Widget */}
+            <div className="flex flex-col">
+              <h3 className="text-xs font-bold text-gray-900 tracking-widest uppercase mb-4">
+                Search Blog
+              </h3>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Type topic & press Enter..."
+                  className="w-full bg-gray-50 border border-gray-200 focus:border-brand-500 rounded-2xl pl-3 pr-10 py-2.5 text-xs font-semibold text-gray-950 placeholder:text-gray-400 outline-none transition-all focus:ring-4 focus:ring-brand-500/10"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const val = e.currentTarget.value.trim();
+                      if (val) {
+                        navigate(`/?search=${encodeURIComponent(val)}`);
+                      }
+                    }
+                  }}
+                />
+                <Search className="absolute right-3.5 top-3 w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+
             {/* Table of Contents */}
             {toc.length > 0 && (
               <div className="flex flex-col">
@@ -431,8 +527,26 @@ export function ArticlePage() {
           <div className="flex-1 max-w-3xl mx-auto w-full">
             <div
               className="prose prose-lg prose-brand max-w-none text-gray-700 leading-relaxed font-sans"
-              dangerouslySetInnerHTML={{ __html: article.content }}
+              dangerouslySetInnerHTML={{ __html: getInjectedContent() }}
             />
+
+            {/* Interactive Tags Badges Row */}
+            {article.tags && article.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-gray-150 items-center">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1.5">
+                  Topic Tags
+                </span>
+                {article.tags.map((tag: string) => (
+                  <Link
+                    key={tag}
+                    to={`/topic/${tag.toLowerCase().trim().replace(/\s+/g, "-")}`}
+                    className="px-3.5 py-1.5 rounded-full bg-gray-50 border border-gray-150 hover:border-brand-200 hover:bg-brand-50/40 text-xs font-bold text-gray-600 hover:text-brand-700 transition-all cursor-pointer shadow-3xs"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            )}
 
             {/* FAQ Accordion Section */}
             {article.faqs && article.faqs.length > 0 && (
@@ -537,6 +651,47 @@ export function ArticlePage() {
                 </div>
               </div>
             </div>
+
+            {/* Sequential Article Navigation (Next / Previous) */}
+            {(prevArticle || nextArticle) && (
+              <div className="grid sm:grid-cols-2 gap-4 mt-8 pt-8 border-t border-gray-100 animate-fade-in">
+                {prevArticle ? (
+                  <Link
+                    to={`/article/${prevArticle.slug || prevArticle.id}`}
+                    className="group flex flex-col p-5 bg-white border border-gray-100 hover:border-brand-100 rounded-2xl text-left transition-all hover:shadow-xs"
+                  >
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1 mb-2">
+                      <ChevronLeft className="w-3.5 h-3.5 text-gray-300 group-hover:text-brand-500 transition-colors" /> Previous Article
+                    </span>
+                    <span className="text-sm font-extrabold text-gray-950 group-hover:text-brand-600 transition-colors line-clamp-2">
+                      {prevArticle.title}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="hidden sm:block p-5 bg-gray-50/20 border border-dashed border-gray-150 rounded-2xl text-left text-[11px] font-semibold text-gray-400 flex items-center justify-center">
+                    You are reading our oldest article in this feed
+                  </div>
+                )}
+
+                {nextArticle ? (
+                  <Link
+                    to={`/article/${nextArticle.slug || nextArticle.id}`}
+                    className="group flex flex-col p-5 bg-white border border-gray-100 hover:border-brand-100 rounded-2xl text-right transition-all hover:shadow-xs"
+                  >
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1 justify-end mb-2">
+                      Next Article <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-brand-500 transition-colors" />
+                    </span>
+                    <span className="text-sm font-extrabold text-gray-950 group-hover:text-brand-600 transition-colors line-clamp-2">
+                      {nextArticle.title}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="hidden sm:block p-5 bg-gray-50/20 border border-dashed border-gray-150 rounded-2xl text-right text-[11px] font-semibold text-gray-400 flex items-center justify-center">
+                    You are reading our latest published article!
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
