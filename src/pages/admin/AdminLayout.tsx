@@ -8,7 +8,7 @@ export function AdminLayout() {
   const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+    `flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] rounded-xl font-semibold text-sm transition-all duration-200 ${
       isActive
         ? "bg-brand-50 text-brand-600 shadow-sm"
         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -51,7 +51,7 @@ export function AdminLayout() {
               setIsMobileMenuOpen(false);
               setIsMediaLibraryOpen(true);
             }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer w-full text-left"
+            className="flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] rounded-xl font-semibold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer w-full text-left"
           >
             <ImageIcon className="h-5 w-5" />
             Media Library
@@ -65,7 +65,7 @@ export function AdminLayout() {
             Settings
           </NavLink>
           <div className="border-t border-gray-100 mt-2 pt-2">
-            <button onClick={() => { localStorage.removeItem("mock_admin"); window.location.href = "/"; }} className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-gray-900 font-semibold text-sm transition-colors">
+            <button onClick={() => { localStorage.removeItem("mock_admin"); window.location.href = "/"; }} className="w-full flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] text-gray-500 hover:text-gray-900 font-semibold text-sm transition-colors rounded-xl hover:bg-gray-50">
               <LogOut className="h-5 w-5" />
               Exit to Site
             </button>
@@ -91,7 +91,7 @@ export function AdminLayout() {
           </NavLink>
           <button
             onClick={() => setIsMediaLibraryOpen(true)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer w-full text-left"
+            className="flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] rounded-xl font-semibold text-sm transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer w-full text-left"
           >
             <ImageIcon className="h-5 w-5" />
             Media Library
@@ -107,7 +107,7 @@ export function AdminLayout() {
         </nav>
         
         <div className="p-4 border-t border-gray-100">
-           <button onClick={() => { localStorage.removeItem("mock_admin"); window.location.href = "/"; }} className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-gray-950 font-semibold text-sm transition-colors hover:bg-gray-50 rounded-xl">
+           <button onClick={() => { localStorage.removeItem("mock_admin"); window.location.href = "/"; }} className="w-full flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] text-gray-500 hover:text-gray-950 font-semibold text-sm transition-colors hover:bg-gray-50 rounded-xl">
              <LogOut className="h-5 w-5" />
              Exit to Site
            </button>

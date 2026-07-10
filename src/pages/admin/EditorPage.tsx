@@ -404,38 +404,41 @@ export function EditorPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* CMS Header Banner */}
-      <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate("/admin/articles")}
-            className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-brand-500" />
-              {id && id !== "new" ? "Edit Article Studio" : "Create Semantic Content"}
-            </h1>
-            <p className="text-xs text-gray-500 font-medium">
-              SEO and AI search experience optimization engine active
-            </p>
+      <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-4">
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/admin/articles")}
+              className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center sm:min-h-0 sm:min-w-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-brand-500" />
+                <span className="hidden sm:inline">{id && id !== "new" ? "Edit Article Studio" : "Create Semantic Content"}</span>
+                <span className="sm:hidden">{id && id !== "new" ? "Edit Article" : "Create Content"}</span>
+              </h1>
+              <p className="text-[10px] sm:text-xs text-gray-500 font-medium">
+                SEO and AI engine active
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-row items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => handleSave("draft")}
-            className="text-gray-600 border border-gray-200 hover:bg-gray-50 px-5 py-2 rounded-full font-bold text-sm transition-colors"
+            className="flex-1 sm:flex-none text-center justify-center text-gray-600 border border-gray-200 hover:bg-gray-50 px-4 sm:px-5 py-3 sm:py-2 rounded-full font-bold text-sm transition-colors min-h-[44px]"
           >
             Save Draft
           </button>
           <button
             onClick={() => handleSave("published")}
-            className="bg-brand-500 text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-brand-600 transition-colors shadow-sm flex items-center gap-2"
+            className="flex-1 sm:flex-none justify-center bg-brand-500 text-white px-4 sm:px-6 py-3 sm:py-2 rounded-full font-bold text-sm hover:bg-brand-600 transition-colors shadow-sm flex items-center gap-2 min-h-[44px]"
           >
-            <CheckCircle className="h-4 w-4" />
-            Publish SEO-Ready
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span className="whitespace-nowrap">Publish</span>
           </button>
         </div>
       </header>

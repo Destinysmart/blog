@@ -146,11 +146,11 @@ export function AdminSettings() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Profile Picture / Avatar</label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
                     <button
                       type="button"
                       onClick={() => setIsMediaModalOpen(true)}
-                      className="w-full flex items-center justify-center gap-2 bg-brand-500 text-white p-2.5 rounded-xl font-bold hover:bg-brand-600 transition-colors shadow-sm text-xs cursor-pointer"
+                      className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 bg-brand-500 text-white p-3 sm:p-2.5 rounded-xl font-bold hover:bg-brand-600 transition-colors shadow-sm text-sm cursor-pointer min-h-[44px]"
                     >
                       <Image className="w-4 h-4" />
                       {adminAvatar ? "Choose Avatar" : "Select Profile Picture"}
@@ -159,7 +159,7 @@ export function AdminSettings() {
                       <button
                         type="button"
                         onClick={() => setAdminAvatar("")}
-                        className="p-2.5 border border-red-100 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors cursor-pointer"
+                        className="w-full sm:w-auto p-3 sm:p-2.5 border border-red-100 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors cursor-pointer flex items-center justify-center min-h-[44px]"
                         title="Remove Picture"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -169,8 +169,8 @@ export function AdminSettings() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-4 pt-2">
-                <div>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                <div className="w-full sm:w-auto text-center sm:text-left">
                   {profileMessage && (
                     <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${
                       profileMessage.includes("successfully") 
@@ -185,7 +185,7 @@ export function AdminSettings() {
                 <button 
                   type="submit"
                   disabled={isSavingProfile}
-                  className="flex items-center gap-2 bg-brand-500 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-brand-600 transition-colors shadow-sm text-sm cursor-pointer disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 bg-brand-500 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold hover:bg-brand-600 transition-colors shadow-sm text-sm cursor-pointer disabled:opacity-50 w-full sm:w-auto min-h-[44px]"
                 >
                   <Save className="h-4 w-4" />
                   {isSavingProfile ? "Saving..." : "Save Profile"}
@@ -205,7 +205,7 @@ export function AdminSettings() {
           {!isAddingCategory && (
             <button 
               onClick={() => setIsAddingCategory(true)}
-              className="flex items-center gap-2 text-sm bg-gray-900 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-gray-800 transition-colors self-start sm:self-auto shadow-sm"
+              className="flex items-center justify-center gap-2 text-sm bg-gray-900 text-white px-4 py-3 sm:py-2.5 rounded-xl font-bold hover:bg-gray-800 transition-colors w-full sm:w-auto shadow-sm min-h-[44px]"
             >
               <FolderPlus className="h-4.5 w-4.5" />
               Add Category
@@ -224,17 +224,17 @@ export function AdminSettings() {
               placeholder="e.g. Bitcoin News"
               autoFocus
             />
-            <div className="flex items-center gap-2 self-end sm:self-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
               <button 
                 type="button" 
                 onClick={() => setIsAddingCategory(false)} 
-                className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors"
+                className="w-full sm:w-auto text-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl px-4 py-3 sm:py-2.5 text-sm font-bold transition-colors min-h-[44px]"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                className="bg-brand-500 text-white rounded-xl px-4 py-2.5 text-xs font-bold hover:bg-brand-600 transition-colors shadow-sm"
+                className="w-full sm:w-auto text-center justify-center bg-brand-500 text-white rounded-xl px-4 py-3 sm:py-2.5 text-sm font-bold hover:bg-brand-600 transition-colors shadow-sm min-h-[44px]"
               >
                 Save Category
               </button>

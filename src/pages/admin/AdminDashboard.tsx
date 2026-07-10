@@ -95,7 +95,7 @@ export function AdminDashboard() {
         </div>
         <Link 
           to="/admin/editor/new" 
-          className="flex items-center gap-2 bg-brand-500 text-white px-5 py-3 rounded-xl font-bold hover:bg-brand-600 transition-all duration-250 shadow-sm hover:shadow-md self-start sm:self-auto text-sm"
+          className="flex items-center justify-center gap-2 bg-brand-500 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold hover:bg-brand-600 transition-all duration-250 shadow-sm hover:shadow-md w-full sm:w-auto text-sm min-h-[44px]"
         >
           <Plus className="h-4.5 w-4.5 stroke-[3px]" />
           Create Article

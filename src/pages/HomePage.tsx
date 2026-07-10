@@ -535,7 +535,7 @@ export function HomePage() {
                     navigate(`/featured/${filter.slug}`);
                   }
                 }}
-                className={`pb-4 text-xs sm:text-sm font-bold whitespace-nowrap border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`pt-3 sm:pt-0 pb-4 text-xs sm:text-sm font-bold whitespace-nowrap border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
                   isActive
                     ? "border-brand-500 text-gray-950 font-black scale-102"
                     : "border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-200"
@@ -842,14 +842,14 @@ export function HomePage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <a 
                   href="https://www.bitlance.work/find-freelancers" 
-                  className="inline-flex items-center justify-center bg-gray-900 text-white font-bold px-6 py-3.5 sm:py-2.5 rounded-full hover:bg-gray-800 transition-colors shadow-sm text-sm group text-center cursor-pointer min-h-[44px]"
+                  className="inline-flex items-center justify-center bg-gray-900 text-white font-bold px-6 py-3.5 sm:py-2.5 rounded-full hover:bg-gray-800 transition-colors shadow-sm text-sm group text-center cursor-pointer min-h-[44px] w-full sm:w-auto"
                 >
                   Hire Bitcoin Talent
                   <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
                 </a>
                 <a 
                   href="https://www.bitlance.work/findwork" 
-                  className="inline-flex items-center justify-center bg-white border border-gray-200 text-gray-700 font-bold px-6 py-3.5 sm:py-2.5 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-xs text-sm text-center cursor-pointer min-h-[44px]"
+                  className="inline-flex items-center justify-center bg-white border border-gray-200 text-gray-700 font-bold px-6 py-3.5 sm:py-2.5 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-xs text-sm text-center cursor-pointer min-h-[44px] w-full sm:w-auto"
                 >
                   Find Remote Work
                 </a>

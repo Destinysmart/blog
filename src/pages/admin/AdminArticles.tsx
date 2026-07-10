@@ -40,13 +40,57 @@ export function AdminArticles() {
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight heading-display">Articles</h1>
           <p className="text-gray-500 mt-1 font-medium">Manage all published and drafted content.</p>
         </div>
-        <Link to="/admin/editor/new" className="bg-brand-500 text-white px-5 py-2.5 rounded-full font-bold hover:bg-brand-600 transition-colors shadow-sm self-start sm:self-auto text-sm">
+        <Link to="/admin/editor/new" className="bg-brand-500 text-white px-5 py-3 sm:py-2.5 rounded-full font-bold hover:bg-brand-600 transition-colors shadow-sm w-full sm:w-auto text-center flex items-center justify-center text-sm min-h-[44px]">
           Write Article
         </Link>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        {/* Mobile View: Cards */}
+        <div className="block md:hidden divide-y divide-gray-100">
+          {articles.map((article: any) => (
+            <div key={article.id} className="p-4 space-y-3">
+              <div className="flex justify-between items-start gap-4">
+                <div className="font-bold text-gray-950 hover:text-brand-600 transition-colors line-clamp-2">
+                  <Link to={`/admin/editor/${article.id}`}>{article.title || "Untitled"}</Link>
+                </div>
+                <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                  article.status === 'published' 
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                    : 'bg-amber-50 text-amber-700 border-amber-100'
+                }`}>
+                  {article.status}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs font-semibold text-gray-500 mt-2">
+                <div>Updated: {new Date(article.updated_at).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                <div className="flex items-center gap-1">Views: {(article.view_count || 0).toLocaleString()}</div>
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-50 mt-3">
+                <Link 
+                  to={`/admin/editor/${article.id}`} 
+                  className="flex-1 flex justify-center items-center gap-1.5 p-2.5 bg-gray-50 text-gray-700 rounded-xl font-bold text-sm transition-colors hover:bg-gray-100"
+                >
+                  <Edit className="h-4 w-4" /> Edit
+                </Link>
+                <button 
+                  onClick={() => setDeleteId(article.id)} 
+                  className="flex-1 flex justify-center items-center gap-1.5 p-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm transition-colors hover:bg-red-100"
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </button>
+              </div>
+            </div>
+          ))}
+          {articles.length === 0 && (
+            <div className="p-8 text-center text-gray-400 font-medium">
+              No articles found. Start writing!
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left min-w-[600px]">
             <thead className="bg-gray-50 border-b border-gray-150">
               <tr>

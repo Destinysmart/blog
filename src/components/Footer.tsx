@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Github, Send, Globe, Check, Heart } from "lucide-react";
 import logoUrl from "../assets/images/bitlance_logo_1782869809232.jpg";
 
@@ -96,15 +97,15 @@ export function Footer() {
           {/* PLATFORM Column */}
           <div className="lg:col-span-2 lg:col-start-7">
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-950 mb-4">PLATFORM</h4>
-            <ul className="flex flex-col gap-3 text-sm font-medium text-gray-500">
+            <ul className="flex flex-col gap-2 sm:gap-3 text-sm font-medium text-gray-500">
               <li>
-                <a href="https://www.bitlance.work/findwork" className="hover:text-gray-950 transition-colors">Find Work</a>
+                <a href="https://www.bitlance.work/findwork" className="block py-1.5 sm:py-0 hover:text-gray-950 transition-colors">Find Work</a>
               </li>
               <li>
-                <a href="https://www.bitlance.work/find-freelancers" className="hover:text-gray-950 transition-colors">Find Freelancers</a>
+                <a href="https://www.bitlance.work/find-freelancers" className="block py-1.5 sm:py-0 hover:text-gray-950 transition-colors">Find Freelancers</a>
               </li>
               <li>
-                <a href="https://www.bitlance.work/find-freelancers" className="hover:text-gray-950 transition-colors">Post a Job</a>
+                <a href="https://www.bitlance.work/find-freelancers" className="block py-1.5 sm:py-0 hover:text-gray-950 transition-colors">Post a Job</a>
               </li>
             </ul>
           </div>
@@ -112,9 +113,12 @@ export function Footer() {
           {/* RESOURCES Column */}
           <div className="lg:col-span-2">
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-950 mb-4">RESOURCES</h4>
-            <ul className="flex flex-col gap-3 text-sm font-medium text-gray-500">
+            <ul className="flex flex-col gap-2 sm:gap-3 text-sm font-medium text-gray-500">
               <li>
-                <a href="https://www.bitlance.work/help" className="hover:text-gray-950 transition-colors">Help Center</a>
+                <a href="https://www.bitlance.work/help" className="block py-1.5 sm:py-0 hover:text-gray-950 transition-colors">Help Center</a>
+              </li>
+              <li>
+                <Link to="/" className="block py-1.5 sm:py-0 hover:text-gray-950 transition-colors">Blog</Link>
               </li>
             </ul>
           </div>
@@ -122,15 +126,15 @@ export function Footer() {
           {/* COMPANY Column */}
           <div className="lg:col-span-2">
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-950 mb-4">COMPANY</h4>
-            <ul className="flex flex-col gap-3 text-sm font-medium text-gray-500">
+            <ul className="flex flex-col gap-2 sm:gap-3 text-sm font-medium text-gray-500">
               <li>
-                <a href="https://www.bitlance.work/about" className="hover:text-gray-950 transition-colors">About Us</a>
+                <a href="https://www.bitlance.work/about" className="block py-1.5 sm:py-0 hover:text-gray-950 transition-colors">About Us</a>
               </li>
               <li>
-                <a href="https://www.bitlance.work/privacy" className="hover:text-gray-950 transition-colors">Privacy Policy</a>
+                <a href="https://www.bitlance.work/privacy" className="block py-1.5 sm:py-0 hover:text-gray-950 transition-colors">Privacy Policy</a>
               </li>
               <li>
-                <a href="https://www.bitlance.work/terms" className="hover:text-gray-950 transition-colors">Terms of Service</a>
+                <a href="https://www.bitlance.work/terms" className="block py-1.5 sm:py-0 hover:text-gray-950 transition-colors">Terms of Service</a>
               </li>
             </ul>
           </div>
