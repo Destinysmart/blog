@@ -444,16 +444,16 @@ export function EditorPage() {
       </header>
 
       {/* Main CMS Workspace Grid */}
-      <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-73px)] overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row lg:h-[calc(100vh-73px)] overflow-hidden">
         {/* Left Side: Traditional Content Drafting Workspace */}
-        <div className="flex-1 overflow-y-auto px-8 py-10 bg-white border-r border-gray-100">
-          <div className="max-w-3xl mx-auto space-y-8">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-10 bg-white border-b lg:border-b-0 lg:border-r border-gray-100">
+          <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
             {/* Category & Cover Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
-              <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50">
-                <Folder className="h-4 w-4 text-brand-500" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-gray-100 pb-4 sm:pb-6">
+              <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-3 sm:py-2.5 bg-gray-50 flex-1 sm:flex-none">
+                <Folder className="h-4 w-4 text-brand-500 shrink-0" />
                 <select
-                  className="bg-transparent border-none text-sm font-semibold text-gray-700 outline-none w-44 cursor-pointer"
+                  className="bg-transparent border-none text-sm font-semibold text-gray-700 outline-none w-full sm:w-44 cursor-pointer"
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
                 >
@@ -467,17 +467,17 @@ export function EditorPage() {
               </div>
 
               {/* Cover Image Control */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => {
                     setMediaTarget("cover");
                     setIsMediaModalOpen(true);
                   }}
-                  className="text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+                  className="w-full sm:w-auto justify-center text-sm sm:text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 px-4 py-3 sm:py-2.5 rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5 min-h-[44px]"
                 >
-                  <ImageIcon className="h-4 w-4" />
-                  {featuredImage ? "Replace Cover Image" : "Select Cover Image"}
+                  <ImageIcon className="h-4 w-4 shrink-0" />
+                  <span>{featuredImage ? "Replace Cover Image" : "Select Cover Image"}</span>
                 </button>
               </div>
             </div>
@@ -487,14 +487,14 @@ export function EditorPage() {
               <input
                 type="text"
                 placeholder="Unleash an Article Title..."
-                className="w-full text-4xl sm:text-5xl font-extrabold text-gray-950 border-none outline-none bg-transparent placeholder:text-gray-200 font-sans tracking-tight focus:ring-0"
+                className="w-full text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-950 border-none outline-none bg-transparent placeholder:text-gray-200 font-sans tracking-tight focus:ring-0 leading-tight"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
               <textarea
                 placeholder="Write a highly informative subtitle / short introductory excerpt to hook search query agents..."
                 rows={2}
-                className="w-full text-lg text-gray-500 border-none outline-none bg-transparent placeholder:text-gray-300 resize-none focus:ring-0"
+                className="w-full text-base sm:text-lg text-gray-500 border-none outline-none bg-transparent placeholder:text-gray-300 resize-none focus:ring-0 leading-relaxed"
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
               />
