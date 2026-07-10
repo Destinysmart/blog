@@ -242,9 +242,19 @@ export function EditorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const textData = await res.text(); let data; try { data = JSON.parse(textData); } catch(e) { throw new Error(`Server error: ${textData.substring(0, 100)}`); }
+      const textData = await res.text();
+      let data: any = null;
+      try {
+        if (textData) {
+          data = JSON.parse(textData);
+        }
+      } catch (e) {
+        // Not valid JSON
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || "Failed to save article");
+        const errorMsg = data?.error || data?.message || textData || `HTTP ${res.status} ${res.statusText}`;
+        throw new Error(`Server error (${res.status}): ${errorMsg}`);
       }
       setSaving(false);
       navigate("/admin/articles");

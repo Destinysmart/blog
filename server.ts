@@ -217,8 +217,14 @@ function adminAuthMiddleware(req: any, res: any, next: any) {
 // ---------------------------------------------------------------------------
 const app = express();
 
-// Increase payload limit for base64 image uploads
-app.use(express.json({ limit: "50mb" }));
+// Increase payload limit for base64 image uploads; handle Vercel pre-parsed bodies gracefully
+app.use((req: any, res: any, next: any) => {
+  if (req.body && typeof req.body === "object" && Object.keys(req.body).length > 0) {
+    next();
+  } else {
+    express.json({ limit: "50mb" })(req, res, next);
+  }
+});
 app.use("/uploads", express.static(UPLOADS_DIR));
 
 // Helper to sanitize slug

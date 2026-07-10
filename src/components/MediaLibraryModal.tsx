@@ -159,18 +159,29 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to upload image");
+      const textData = await res.text();
+      let data: any = null;
+      try {
+        if (textData) {
+          data = JSON.parse(textData);
+        }
+      } catch (e) {
+        // Not JSON
       }
 
-      const newMedia = await res.json();
+      if (!res.ok) {
+        const serverError = data?.error || data?.message || textData || `HTTP ${res.status}`;
+        throw new Error(`Upload failed: ${serverError}`);
+      }
+
+      const newMedia = data;
       setMediaItems(prev => [newMedia, ...prev]);
       setSelectedItem(newMedia);
       loadItemFields(newMedia);
       setActiveTab("browse");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to upload or optimize image.");
+      alert(err.message || "Failed to upload or optimize image.");
     } finally {
       setIsUploading(false);
     }
