@@ -163,7 +163,7 @@ async function seedFirestoreIfNeeded() {
 }
 
 // Trigger initial seed check on load
-// seedFirestoreIfNeeded();
+seedFirestoreIfNeeded();
 
 // ---------------------------------------------------------------------------
 // Security: Firebase Auth Token Verification Middleware
@@ -697,9 +697,13 @@ app.post("/api/media", adminAuthMiddleware, async (req, res) => {
       finalUrl = uploadRes.secure_url;
       // Generate highly-optimized smaller size image for fast grid rendering
       finalThumbnailUrl = finalUrl.replace("/upload/", "/upload/w_300,c_limit/");
+    } else if (process.env.VERCEL) {
+      // Direct Base64 Firestore Fallback on Vercel to bypass ephemeral local filesystem limits
+      console.log("Cloudinary not configured on Vercel. Storing image as Base64 in Firestore.");
+      finalUrl = file;
+      finalThumbnailUrl = thumbnail || file;
     } else {
       // Fallback local WebP saving mechanism
-      if (process.env.VERCEL) { return res.status(500).json({ error: "Local image uploads are not persistent on Vercel. Please configure Cloudinary API keys in Vercel settings." }); }
       const ext = ".webp";
       let base = "";
       if (title) {
