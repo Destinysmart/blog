@@ -246,32 +246,32 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 backdrop-blur-xs p-4 animate-fade-in">
-      <div className="bg-white w-full max-w-6xl h-[85vh] rounded-3xl flex flex-col overflow-hidden shadow-2xl border border-gray-100">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/60 backdrop-blur-xs p-2 sm:p-4 animate-fade-in">
+      <div className="bg-white w-full max-w-6xl h-full sm:h-[85vh] rounded-2xl sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl border border-gray-100">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 border-b border-gray-100">
           <div>
-            <h2 className="text-xl font-bold text-gray-950 flex items-center gap-2">
-              <ImageIcon className="h-5.5 w-5.5 text-brand-500" />
-              {title}
+            <h2 className="text-lg sm:text-xl font-bold text-gray-950 flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 sm:h-5.5 sm:w-5.5 text-brand-500 shrink-0" />
+              <span className="line-clamp-1">{title}</span>
             </h2>
-            <p className="text-xs text-gray-500 font-medium mt-0.5">Centralized, WebP optimized, SEO and AI structured media storage.</p>
+            <p className="hidden sm:block text-xs text-gray-500 font-medium mt-0.5">Centralized, WebP optimized, SEO and AI structured media storage.</p>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900 cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900 cursor-pointer shrink-0"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center justify-between px-8 bg-gray-50 border-b border-gray-150">
-          <div className="flex gap-1.5 py-3">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 sm:px-8 bg-gray-50 border-b border-gray-150 gap-3 py-3 md:py-0">
+          <div className="flex gap-1.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 md:py-3 scrollbar-hide">
             <button
               onClick={() => setActiveTab("browse")}
-              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-4 py-2.5 md:py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                 activeTab === "browse" 
                   ? "bg-white text-gray-950 shadow-xs border border-gray-200" 
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-150"
@@ -281,7 +281,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
             </button>
             <button
               onClick={() => setActiveTab("upload")}
-              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-4 py-2.5 md:py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                 activeTab === "upload" 
                   ? "bg-white text-gray-950 shadow-xs border border-gray-200" 
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-150"
@@ -292,12 +292,12 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
           </div>
 
           {activeTab === "browse" && (
-            <div className="relative w-72">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <div className="relative w-full md:w-72 shrink-0">
+              <Search className="absolute left-3 top-3 md:top-2.5 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search media library..."
-                className="w-full pl-9 pr-4 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10"
+                className="w-full pl-9 pr-4 py-2 md:py-1.5 bg-white border border-gray-200 rounded-xl text-sm md:text-xs font-medium focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 min-h-[44px] md:min-h-0"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
@@ -306,17 +306,17 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden flex-col md:flex-row">
           {activeTab === "upload" ? (
             /* Upload View */
-            <div className="flex-1 p-8 flex flex-col items-center justify-center">
+            <div className="flex-1 p-4 sm:p-8 flex flex-col items-center justify-center">
               <div
                 onDragEnter={handleDrag}
                 onDragOver={handleDrag}
                 onDragLeave={handleDrag}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-full max-w-xl p-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+                className={`w-full max-w-xl p-8 sm:p-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
                   dragActive 
                     ? "border-brand-500 bg-brand-50/40" 
                     : "border-gray-250 hover:border-brand-400 hover:bg-gray-50/40"
@@ -359,10 +359,10 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
             </div>
           ) : (
             /* Browse View */
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
               
               {/* Image Grid */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className={`flex-1 overflow-y-auto p-4 sm:p-6 ${selectedItem ? 'hidden md:block' : 'block'}`}>
                 {isLoading ? (
                   <div className="h-full flex items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-3 border-gray-100 border-t-brand-500"></div>
@@ -374,7 +374,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                     <p className="text-xs text-gray-500 mt-1">Upload images to populate your centralized library.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                     {filteredItems.map(item => (
                       <div 
                         key={item.id}
@@ -391,9 +391,9 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                           className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-gray-950/70 via-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
-                          <p className="text-[11px] font-bold text-white truncate">{item.title}</p>
-                          <p className="text-[9px] text-gray-300 font-medium mt-0.5">{formatBytes(item.size)}</p>
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-950/70 via-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2 sm:p-3 flex flex-col justify-end">
+                          <p className="text-[10px] sm:text-[11px] font-bold text-white truncate">{item.title}</p>
+                          <p className="text-[8px] sm:text-[9px] text-gray-300 font-medium mt-0.5">{formatBytes(item.size)}</p>
                         </div>
                       </div>
                     ))}
@@ -403,10 +403,18 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
 
               {/* Selected Asset Information & Settings Panel */}
               {selectedItem && (
-                <div className="w-80 border-l border-gray-150 overflow-y-auto bg-gray-50/50 p-6 flex flex-col justify-between">
-                  <div className="space-y-6">
+                <div className="w-full md:w-80 md:border-l border-gray-150 overflow-y-auto bg-gray-50/50 p-4 sm:p-6 flex flex-col justify-between absolute md:relative inset-0 md:inset-auto z-10 md:z-0 flex-1 md:flex-none h-full bg-white md:bg-gray-50/50">
+                  <div className="space-y-5 sm:space-y-6">
                     <div>
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Asset Details</h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Asset Details</h3>
+                        <button 
+                          onClick={() => setSelectedItem(null)}
+                          className="md:hidden p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:text-gray-900"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                       <div className="rounded-xl overflow-hidden aspect-video border border-gray-200 shadow-xs mb-3 bg-white flex items-center justify-center relative group">
                         <img 
                           src={selectedItem.url} 
@@ -415,7 +423,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                         />
                         <button 
                           onClick={() => handleCopyUrl(selectedItem.url, selectedItem.id)}
-                          className="absolute bottom-2 right-2 bg-gray-950/80 text-white p-2 rounded-lg hover:bg-gray-950 transition-colors cursor-pointer"
+                          className="absolute bottom-2 right-2 bg-gray-950/80 text-white p-2 rounded-lg hover:bg-gray-950 transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
                           title="Copy Image URL"
                         >
                           {copiedId === selectedItem.id ? (
@@ -446,7 +454,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                     {selectedItem.aiMetadata && (
                       <div className="p-3.5 bg-brand-50/50 rounded-xl border border-brand-100">
                         <h4 className="text-[10px] font-bold text-brand-900 flex items-center gap-1.5 uppercase tracking-wider mb-2">
-                          <Sparkles className="h-3.5 w-3.5 text-brand-500" /> AI / AEO Optimization
+                          <Sparkles className="h-3.5 w-3.5 text-brand-500 shrink-0" /> AI / AEO Optimization
                         </h4>
                         <p className="text-[11px] text-brand-850 font-medium italic">
                           "{selectedItem.aiMetadata.context}"
@@ -476,7 +484,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                             <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">Image Title</label>
                             <input 
                               type="text"
-                              className="w-full text-xs font-medium p-2 bg-white border border-gray-250 rounded-lg focus:outline-none focus:border-brand-500"
+                              className="w-full text-sm md:text-xs font-medium p-2.5 md:p-2 bg-white border border-gray-250 rounded-lg focus:outline-none focus:border-brand-500 min-h-[44px] md:min-h-0"
                               value={editTitle}
                               onChange={e => setEditTitle(e.target.value)}
                             />
@@ -486,7 +494,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                             <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">Alt Text (AEO Index)</label>
                             <input 
                               type="text"
-                              className="w-full text-xs font-medium p-2 bg-white border border-gray-250 rounded-lg focus:outline-none focus:border-brand-500"
+                              className="w-full text-sm md:text-xs font-medium p-2.5 md:p-2 bg-white border border-gray-250 rounded-lg focus:outline-none focus:border-brand-500 min-h-[44px] md:min-h-0"
                               value={editAltText}
                               onChange={e => setEditAltText(e.target.value)}
                             />
@@ -496,7 +504,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                             <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">Caption</label>
                             <input 
                               type="text"
-                              className="w-full text-xs font-medium p-2 bg-white border border-gray-250 rounded-lg focus:outline-none focus:border-brand-500"
+                              className="w-full text-sm md:text-xs font-medium p-2.5 md:p-2 bg-white border border-gray-250 rounded-lg focus:outline-none focus:border-brand-500 min-h-[44px] md:min-h-0"
                               value={editCaption}
                               onChange={e => setEditCaption(e.target.value)}
                               placeholder="Display caption..."
@@ -507,7 +515,7 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                             <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">Description (AEO Context)</label>
                             <textarea 
                               rows={2}
-                              className="w-full text-xs font-medium p-2 bg-white border border-gray-250 rounded-lg focus:outline-none focus:border-brand-500 resize-none"
+                              className="w-full text-sm md:text-xs font-medium p-2.5 md:p-2 bg-white border border-gray-250 rounded-lg focus:outline-none focus:border-brand-500 resize-none min-h-[44px] md:min-h-0"
                               value={editDescription}
                               onChange={e => setEditDescription(e.target.value)}
                               placeholder="Describe image purpose..."
@@ -520,18 +528,18 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                         <button 
                           type="button"
                           onClick={() => handleDeleteItem(selectedItem)}
-                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-2.5 md:p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 flex items-center justify-center"
                           title="Delete Asset"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-5 w-5 md:h-4 md:w-4" />
                         </button>
 
                         <button 
                           type="submit"
                           disabled={isSavingDetails}
-                          className="flex items-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                          className="flex items-center justify-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-white px-4 md:px-3.5 py-2.5 md:py-1.5 rounded-lg text-sm md:text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 min-h-[44px] md:min-h-0 flex-1 md:flex-none ml-3 md:ml-0"
                         >
-                          <Save className="h-3.5 w-3.5" />
+                          <Save className="h-4 w-4 md:h-3.5 md:w-3.5" />
                           {isSavingDetails ? "Saving..." : "Save SEO"}
                         </button>
                       </div>
@@ -544,12 +552,12 @@ export function MediaLibraryModal({ isOpen, onClose, onSelect, title = "Centrali
                     </form>
                   </div>
 
-                  <div className="pt-6 border-t border-gray-150 flex flex-col gap-2">
+                  <div className="pt-6 mt-4 md:mt-0 border-t border-gray-150 flex flex-col gap-2 pb-4 md:pb-0">
                     <button
                       type="button"
                       disabled={!selectedItem}
                       onClick={() => selectedItem && onSelect(selectedItem)}
-                      className="w-full bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-950 text-white py-2.5 rounded-xl font-bold text-xs shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                      className="w-full bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-950 text-white py-3.5 md:py-2.5 rounded-xl font-bold text-sm md:text-xs shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
                     >
                       Select Image
                     </button>
