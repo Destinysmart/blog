@@ -8,9 +8,9 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Dedicated Newsletter Section/Card inside the footer container but at the top */}
         <div className="mb-16 animate-fade-in">
-          <div className="border border-gray-100 bg-[#FAF9F6]/60 rounded-[2.5rem] p-8 md:p-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 shadow-sm">
-            <div className="max-w-xl">
-              <h3 className="text-2xl font-extrabold text-gray-950 tracking-tight mb-2">
+          <div className="border border-gray-100 bg-[#FAF9F6]/60 rounded-[2rem] sm:rounded-[2.5rem] px-5 py-8 sm:p-10 md:p-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 shadow-sm">
+            <div className="max-w-xl text-left">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-950 tracking-tight mb-2">
                 Subscribe to our newsletter
               </h3>
               <p className="text-gray-500 text-sm leading-relaxed font-medium">
@@ -23,7 +23,7 @@ export function Footer() {
                 src="https://bitlance.substack.com/embed"
                 width="480"
                 height="320"
-                className="w-full max-w-full md:max-w-[90%] lg:max-w-[480px] rounded-3xl border border-gray-100 shadow-sm bg-white min-h-[320px] transition-all"
+                className="w-full max-w-full md:max-w-[90%] lg:max-w-[480px] rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm bg-white h-[380px] sm:h-[320px] transition-all duration-300 hover:shadow-md"
                 style={{ border: "1px solid #EEE", background: "white" }}
                 frameBorder="0"
                 scrolling="no"

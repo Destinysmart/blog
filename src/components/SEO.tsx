@@ -49,7 +49,7 @@ interface SEOProps {
 }
 
 export function SEO({
-  title = "BitLance - Remote Work & Bitcoin Freelancing",
+  title = "BitLance Blog - Bitcoin Freelancing Blog",
   description = "Guides, tutorials, industry insights, freelancing tips, and Bitcoin career resources.",
   image = "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2670&auto=format&fit=crop",
   url = "https://blog.bitlance.work",
@@ -221,6 +221,9 @@ export function SEO({
       <title>{title}</title>
       <meta name="title" content={title} />
       <meta name="description" content={description} />
+      <link rel="icon" type="image/jpeg" href="/logo.png" />
+      <link rel="shortcut icon" type="image/jpeg" href="/logo.png" />
+      <link rel="apple-touch-icon" href="/logo.png" />
       
       {/* Robots Indexing Controls */}
       <meta name="robots" content={robotsMeta} />

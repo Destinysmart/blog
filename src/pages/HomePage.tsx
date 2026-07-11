@@ -267,7 +267,7 @@ export function HomePage() {
 
   const dynamicTitle = activeSelectionName
     ? `${activeSelectionName} Guides & Insights - BitLance`
-    : "BitLance Blog - Vetted Remote Bitcoin Jobs & Freelance Marketplace";
+    : "BitLance Blog - Bitcoin Freelancing Blog";
 
   const dynamicDescription = activeSelectionName
     ? `Explore vetted articles, tutorials, and career insights about ${activeSelectionName} in the Bitcoin economy on BitLance.`

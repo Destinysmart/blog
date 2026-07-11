@@ -437,6 +437,23 @@ app.get("/sitemap.xml", async (req, res) => {
   }
 });
 
+// Google Search Console Dynamic HTML File Verification Handler
+app.get("/google:token.html", (req, res) => {
+  const token = req.params.token;
+  res.header("Content-Type", "text/html");
+  res.send(`google-site-verification: google${token}.html`);
+});
+
+// Serve the BitLance logo as the favicon/icon
+app.get(["/favicon.ico", "/logo.png", "/apple-touch-icon.png"], (req, res) => {
+  const logoPath = path.join(process.cwd(), "src/assets/images/bitlance_logo_1782869809232.jpg");
+  if (fs.existsSync(logoPath)) {
+    res.sendFile(logoPath);
+  } else {
+    res.status(404).end();
+  }
+});
+
 // Robots.txt Handler with advanced AI/LLM Web Crawling specifications (AEO optimization)
 app.get("/robots.txt", (req, res) => {
   const host = (req.headers.host || "").toLowerCase();
@@ -1391,6 +1408,35 @@ app.delete("/api/media/:id", adminAuthMiddleware, async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Google Search Console & SEO Configuration Endpoints
+// ---------------------------------------------------------------------------
+app.get("/api/settings/google-search-console", async (req, res) => {
+  try {
+    const docSnap = await getDoc(doc(db, "settings", "google_search_console"));
+    if (docSnap.exists()) {
+      res.json(docSnap.data());
+    } else {
+      res.json({ google_site_verification: "" });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/settings/google-search-console", adminAuthMiddleware, async (req, res) => {
+  try {
+    const { google_site_verification } = req.body;
+    await setDoc(doc(db, "settings", "google_search_console"), {
+      google_site_verification: google_site_verification || "",
+      updatedAt: new Date().toISOString()
+    });
+    res.json({ success: true, google_site_verification });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // HTML Dynamic Head Metadata Injection (SEO & AEO)
 // ---------------------------------------------------------------------------
 async function getMetadataForPath(reqPath: string) {
@@ -1431,7 +1477,7 @@ async function getMetadataForPath(reqPath: string) {
   } catch (_) {}
 
   // Default Homepage Meta
-  const title = "BitLance Blog - Vetted Remote Bitcoin Jobs & Freelance Insights";
+  const title = "BitLance Blog - Bitcoin Freelancing Blog";
   const description = "Discover guides, tutorials, remote work strategies, and industry insights to thrive in the borderless Bitcoin economy on BitLance.";
   const image = "https://images.unsplash.com/photo-1639762681485-074b7f4ec651?q=80&w=2670&auto=format&fit=crop";
   const url = "https://blog.bitlance.work";
@@ -1470,6 +1516,7 @@ function injectMetaTags(html: string, meta: any): string {
   <meta name="title" content="${cleanTitle}" />
   <meta name="description" content="${cleanDescription}" />
   <link rel="canonical" href="${cleanUrl}" />
+  ${meta.googleSiteVerification ? `<meta name="google-site-verification" content="${escapeHtml(meta.googleSiteVerification)}" />` : ""}
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="${meta.type}" />
@@ -1547,7 +1594,17 @@ if (!process.env.VERCEL) {
           }
         }
         
-        const meta = await getMetadataForPath(url);
+        const meta: any = await getMetadataForPath(url);
+        
+        let gsv = "";
+        try {
+          const docSnap = await getDoc(doc(db, "settings", "google_search_console"));
+          if (docSnap.exists()) {
+            gsv = docSnap.data().google_site_verification || "";
+          }
+        } catch (_) {}
+        meta.googleSiteVerification = gsv;
+
         const html = injectMetaTags(template, meta);
         res.status(200).set({ "Content-Type": "text/html" }).end(html);
       } catch (e) {
