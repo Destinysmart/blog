@@ -1,27 +1,14 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Github, Send, Globe, Check, Heart } from "lucide-react";
+import { Github, Send, Globe, Heart } from "lucide-react";
 import logoUrl from "../assets/images/bitlance_logo_1782869809232.jpg";
 
 export function Footer() {
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail("");
-      setTimeout(() => setSubscribed(false), 5000);
-    }
-  };
-
   return (
     <footer className="bg-white border-t border-gray-100 pt-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Dedicated Newsletter Section/Card inside the footer container but at the top */}
         <div className="mb-16 animate-fade-in">
-          <div className="border border-gray-100 bg-[#FAF9F6]/60 rounded-[2.5rem] p-8 md:p-12 flex flex-col md:flex-row md:items-center md:justify-between gap-8 shadow-sm">
+          <div className="border border-gray-100 bg-[#FAF9F6]/60 rounded-[2.5rem] p-8 md:p-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 shadow-sm">
             <div className="max-w-xl">
               <h3 className="text-2xl font-extrabold text-gray-950 tracking-tight mb-2">
                 Subscribe to our newsletter
@@ -31,30 +18,17 @@ export function Footer() {
               </p>
             </div>
             
-            <div className="w-full md:w-auto shrink-0">
-              {subscribed ? (
-                <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 border border-emerald-100 px-6 py-3 rounded-2xl text-xs font-semibold animate-fade-in">
-                  <Check className="w-4.5 h-4.5 shrink-0" />
-                  <span>Subscribed successfully!</span>
-                </div>
-              ) : (
-                <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 w-full sm:max-w-md">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="bg-white border border-gray-200 text-sm px-5 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 w-full sm:w-64 md:w-72 placeholder-gray-400 font-medium shadow-sm"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm px-6 py-3 rounded-2xl transition-colors shrink-0 shadow-sm"
-                  >
-                    Subscribe
-                  </button>
-                </form>
-              )}
+            <div className="w-full lg:w-auto shrink-0 flex justify-center items-center py-2">
+              <iframe
+                src="https://bitlance.substack.com/embed"
+                width="480"
+                height="320"
+                className="w-full max-w-full md:max-w-[90%] lg:max-w-[480px] rounded-3xl border border-gray-100 shadow-sm bg-white min-h-[320px] transition-all"
+                style={{ border: "1px solid #EEE", background: "white" }}
+                frameBorder="0"
+                scrolling="no"
+                title="Substack Newsletter"
+              />
             </div>
           </div>
         </div>
