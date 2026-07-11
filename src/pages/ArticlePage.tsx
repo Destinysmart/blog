@@ -37,6 +37,7 @@ export function ArticlePage() {
   const [nextArticle, setNextArticle] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
@@ -62,6 +63,11 @@ export function ArticlePage() {
     fetch("/api/categories")
       .then((r) => r.json())
       .then((data) => setCategories(data))
+      .catch(console.error);
+
+    fetch("/api/topics")
+      .then((r) => r.json())
+      .then((data) => setTopics(data))
       .catch(console.error);
   }, []);
 
@@ -403,23 +409,23 @@ export function ArticlePage() {
           {/* Left Sidebar (Desktop) - TOC & Socials */}
           <div className="hidden lg:flex flex-col gap-12 sticky top-32 h-[calc(100vh-8rem)] overflow-y-auto pb-8 shrink-0 w-64 pr-4">
             {/* Search Blog Widget */}
-            <div className="flex flex-col">
+            <div className="flex flex-col animate-fade-in">
               <h3 className="text-xs font-bold text-gray-900 tracking-widest uppercase mb-4">
                 Search Blog
               </h3>
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Type topic & press Enter..."
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-brand-500 rounded-2xl pl-3 pr-10 py-2.5 text-xs font-semibold text-gray-950 placeholder:text-gray-400 outline-none transition-all focus:ring-4 focus:ring-brand-500/10"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const val = e.currentTarget.value.trim();
-                      if (val) {
-                        navigate(`/?search=${encodeURIComponent(val)}`);
-                      }
-                    }
+                  placeholder="Click to search blog..."
+                  className="w-full bg-gray-50 border border-gray-200 focus:border-brand-500 rounded-2xl pl-3 pr-10 py-2.5 text-xs font-semibold text-gray-950 placeholder:text-gray-400 outline-none transition-all focus:ring-4 focus:ring-brand-500/10 cursor-pointer"
+                  onClick={() => {
+                    window.dispatchEvent(new Event("open-global-search"));
                   }}
+                  onFocus={(e) => {
+                    e.target.blur();
+                    window.dispatchEvent(new Event("open-global-search"));
+                  }}
+                  readOnly
                 />
                 <Search className="absolute right-3.5 top-3 w-4 h-4 text-gray-400" />
               </div>
@@ -448,6 +454,47 @@ export function ArticlePage() {
                     </a>
                   ))}
                 </nav>
+              </div>
+            )}
+
+            {/* Browse Categories */}
+            {categories.length > 0 && (
+              <div className="flex flex-col animate-fade-in">
+                <h3 className="text-xs font-bold text-gray-900 tracking-widest uppercase mb-4">
+                  Browse Categories
+                </h3>
+                <nav className="flex flex-col gap-2.5">
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.id}
+                      to={`/category/${cat.slug || cat.id}`}
+                      className="text-sm text-gray-500 hover:text-brand-600 transition-colors font-semibold flex items-center justify-between group"
+                    >
+                      <span>{cat.name}</span>
+                      <span className="text-[10px] text-gray-300 font-bold group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all">→</span>
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            )}
+
+            {/* Trending Topics */}
+            {topics.length > 0 && (
+              <div className="flex flex-col animate-fade-in">
+                <h3 className="text-xs font-bold text-gray-900 tracking-widest uppercase mb-4">
+                  Trending Topics
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {topics.slice(0, 8).map((topic) => (
+                    <Link
+                      key={topic.id}
+                      to={`/topic/${topic.slug || topic.id}`}
+                      className="px-2.5 py-1.5 rounded-xl bg-gray-50 border border-gray-150 hover:border-brand-200 hover:bg-brand-50/20 text-[10px] font-bold text-gray-500 hover:text-brand-600 transition-all cursor-pointer shadow-3xs"
+                    >
+                      #{topic.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
 

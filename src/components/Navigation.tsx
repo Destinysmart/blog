@@ -7,7 +7,7 @@ export function Navigation() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Global cmd+k shortcut handling
+  // Global cmd+k shortcut handling and custom event listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -15,8 +15,18 @@ export function Navigation() {
         setIsSearchOpen(true);
       }
     };
+    
+    const handleCustomSearchOpen = () => {
+      setIsSearchOpen(true);
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("open-global-search", handleCustomSearchOpen);
+    
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("open-global-search", handleCustomSearchOpen);
+    };
   }, []);
 
   return (
