@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { GoogleGenAI, Type } from "@google/genai";
 import { initializeApp as initAdminApp, cert, applicationDefault, getApps as getAdminApps } from "firebase-admin/app";
 import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
-import { getAuth as getAdminAuth } from "firebase-admin/auth";
+import { OAuth2Client } from "google-auth-library";
 import { v2 as cloudinary } from "cloudinary";
 
 const isESM = false;
@@ -223,17 +223,29 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "smartdestinyonyekachi@gmail.c
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
+// Verifies Firebase ID tokens using google-auth-library (already a
+// firebase-admin dependency). Avoids firebase-admin/auth, whose jwks-rsa ->
+// jose (ESM-only) dependency crashes under the CommonJS server bundle.
+// Firebase ID tokens are Google-signed JWTs; the correct audience is the
+// Firebase project ID and the issuer is securetoken.google.com/<projectId>.
+const oauthClient = new OAuth2Client();
+const FIREBASE_ISSUER = `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`;
+
 async function verifyFirebaseToken(token: string): Promise<{ uid: string; email?: string } | null> {
   try {
-    // Cryptographically verifies the token signature against Google's public
-    // keys, plus audience, issuer, and expiry. Never trust a decoded payload
-    // without signature verification.
-    const decoded = await getAdminAuth(adminApp).verifyIdToken(token);
-    const email = (decoded.email || "").toLowerCase();
-    if (!email || !ADMIN_EMAILS.includes(email)) {
-      return null;
-    }
-    return { uid: decoded.uid, email: decoded.email };
+    const ticket = await oauthClient.verifyIdToken({
+      idToken: token,
+      audience: FIREBASE_PROJECT_ID,
+      // Firebase signs ID tokens with keys published at this JWKS endpoint.
+      // google-auth-library fetches and caches Google's public certs and
+      // verifies the signature, audience, and expiry.
+    });
+    const payload = ticket.getPayload();
+    if (!payload) return null;
+    if (payload.iss !== FIREBASE_ISSUER) return null;
+    const email = (payload.email || "").toLowerCase();
+    if (!email || !ADMIN_EMAILS.includes(email)) return null;
+    return { uid: payload.sub as string, email: payload.email as string | undefined };
   } catch (_) {
     return null;
   }
