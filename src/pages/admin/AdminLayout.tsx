@@ -2,6 +2,16 @@ import React, { useState } from "react";
 import { NavLink, Link, Outlet } from "react-router-dom";
 import { LayoutDashboard, FileText, Settings, Users, LogOut, Menu, X, Image as ImageIcon } from "lucide-react";
 import { MediaLibraryModal } from "../../components/MediaLibraryModal";
+import { auth } from "../../lib/firebase";
+import { signOut } from "firebase/auth";
+
+async function handleLogout() {
+  try {
+    await signOut(auth);
+  } finally {
+    window.location.href = "/";
+  }
+}
 
 export function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -65,7 +75,7 @@ export function AdminLayout() {
             Settings
           </NavLink>
           <div className="border-t border-gray-100 mt-2 pt-2">
-            <button onClick={() => { localStorage.removeItem("mock_admin"); window.location.href = "/"; }} className="w-full flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] text-gray-500 hover:text-gray-900 font-semibold text-sm transition-colors rounded-xl hover:bg-gray-50">
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] text-gray-500 hover:text-gray-900 font-semibold text-sm transition-colors rounded-xl hover:bg-gray-50">
               <LogOut className="h-5 w-5" />
               Exit to Site
             </button>
@@ -107,7 +117,7 @@ export function AdminLayout() {
         </nav>
         
         <div className="p-4 border-t border-gray-100">
-           <button onClick={() => { localStorage.removeItem("mock_admin"); window.location.href = "/"; }} className="w-full flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] text-gray-500 hover:text-gray-950 font-semibold text-sm transition-colors hover:bg-gray-50 rounded-xl">
+           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 sm:px-3 py-3 sm:py-2.5 min-h-[44px] text-gray-500 hover:text-gray-950 font-semibold text-sm transition-colors hover:bg-gray-50 rounded-xl">
              <LogOut className="h-5 w-5" />
              Exit to Site
            </button>

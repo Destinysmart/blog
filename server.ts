@@ -4,8 +4,9 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 // import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { initializeFirestore, getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, limit } from "firebase/firestore";
+import { initializeApp as initAdminApp, cert, applicationDefault, getApps as getAdminApps } from "firebase-admin/app";
+import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
+import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { v2 as cloudinary } from "cloudinary";
 
 const isESM = false;
@@ -33,21 +34,67 @@ for (const p of possiblePaths) {
 }
 
 // ---------------------------------------------------------------------------
-// Firebase Firestore Setup
+// Firebase Admin SDK Setup
 // ---------------------------------------------------------------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyCyxYxh9eSlSy7BLQfHmkzfaJ2bZmPL3-8",
-  authDomain: "gen-lang-client-0854992145.firebaseapp.com",
-  projectId: "gen-lang-client-0854992145",
-  storageBucket: "gen-lang-client-0854992145.firebasestorage.app",
-  messagingSenderId: "1065401317450",
-  appId: "1:1065401317450:web:4e3c82bae927fed11cceb3"
-};
+// The server authenticates to Firestore as a privileged service account and
+// bypasses security rules. This lets firestore.rules deny ALL direct client
+// access — every read/write must flow through this API.
+//
+// Credentials resolution order:
+//   1. FIREBASE_SERVICE_ACCOUNT env var (full service-account JSON, for Vercel etc.)
+//   2. Application Default Credentials (automatic on Cloud Run / AI Studio)
+const FIREBASE_PROJECT_ID = "gen-lang-client-0854992145";
+const FIRESTORE_DATABASE_ID = "ai-studio-bitlanceblog-e2b755df-755d-4852-a4bc-0220907937fb";
 
-const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const db = initializeFirestore(firebaseApp, {
-  experimentalForceLongPolling: true,
-}, "ai-studio-bitlanceblog-e2b755df-755d-4852-a4bc-0220907937fb");
+let adminCredential: ReturnType<typeof cert> | ReturnType<typeof applicationDefault> | undefined;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    adminCredential = cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT));
+    console.log("Firebase Admin: using FIREBASE_SERVICE_ACCOUNT credentials.");
+  } catch (e) {
+    console.error("FIREBASE_SERVICE_ACCOUNT is set but is not valid JSON. Falling back to Application Default Credentials.", e);
+  }
+}
+if (!adminCredential) {
+  adminCredential = applicationDefault();
+  console.log("Firebase Admin: using Application Default Credentials (Cloud Run / gcloud).");
+}
+
+const adminApp = getAdminApps().length === 0
+  ? initAdminApp({ credential: adminCredential, projectId: FIREBASE_PROJECT_ID })
+  : getAdminApps()[0];
+
+const db = getAdminFirestore(adminApp, FIRESTORE_DATABASE_ID);
+
+// ---------------------------------------------------------------------------
+// Firestore client-SDK compatibility shim
+// ---------------------------------------------------------------------------
+// The routes below were written against the modular client SDK (getDocs,
+// setDoc, ...). These thin wrappers map those calls onto the Admin SDK so the
+// route code stays untouched.
+type QueryConstraint = (q: FirebaseFirestore.Query) => FirebaseFirestore.Query;
+
+const collection = (_db: unknown, name: string) => db.collection(name);
+const doc = (_db: unknown, col: string, id: string) => db.collection(col).doc(id);
+const getDocs = (q: FirebaseFirestore.Query) => q.get();
+const getDoc = async (ref: FirebaseFirestore.DocumentReference) => {
+  const snap = await ref.get();
+  return {
+    id: snap.id,
+    ref: snap.ref,
+    exists: () => snap.exists,
+    data: () => snap.data(),
+  };
+};
+const setDoc = (ref: FirebaseFirestore.DocumentReference, data: any) => ref.set(data);
+const addDoc = (col: FirebaseFirestore.CollectionReference, data: any) => col.add(data);
+const updateDoc = (ref: FirebaseFirestore.DocumentReference, data: any) => ref.update(data);
+const deleteDoc = (ref: FirebaseFirestore.DocumentReference) => ref.delete();
+const query = (col: FirebaseFirestore.Query, ...constraints: QueryConstraint[]) =>
+  constraints.reduce((q, c) => c(q), col);
+const where = (field: string, op: FirebaseFirestore.WhereFilterOp, value: any): QueryConstraint =>
+  (q) => q.where(field, op, value);
+const limit = (n: number): QueryConstraint => (q) => q.limit(n);
 
 const articlesCol = () => collection(db, "articles");
 const draftsCol = () => collection(db, "drafts");
@@ -168,34 +215,31 @@ seedFirestoreIfNeeded();
 // ---------------------------------------------------------------------------
 // Security: Firebase Auth Token Verification Middleware
 // ---------------------------------------------------------------------------
-function verifyFirebaseToken(token: string): { uid: string; email?: string } | null {
-  if (token === "dev-admin-token-smartdestinyonyekachi@gmail.com") {
-    return { uid: "admin-1", email: "smartdestinyonyekachi@gmail.com" };
-  }
+// Emails granted admin API access. Override with a comma-separated
+// ADMIN_EMAILS env var. Any authenticated user NOT on this list is rejected —
+// public signup accounts must never reach admin endpoints.
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "smartdestinyonyekachi@gmail.com")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+async function verifyFirebaseToken(token: string): Promise<{ uid: string; email?: string } | null> {
   try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
-    
-    // Validate the audience matches the Firebase project ID
-    if (payload.aud !== "gen-lang-client-0854992145") {
+    // Cryptographically verifies the token signature against Google's public
+    // keys, plus audience, issuer, and expiry. Never trust a decoded payload
+    // without signature verification.
+    const decoded = await getAdminAuth(adminApp).verifyIdToken(token);
+    const email = (decoded.email || "").toLowerCase();
+    if (!email || !ADMIN_EMAILS.includes(email)) {
       return null;
     }
-    
-    // Check expiration
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp < now) {
-      return null;
-    }
-    
-    return { uid: payload.sub, email: payload.email };
+    return { uid: decoded.uid, email: decoded.email };
   } catch (_) {
     return null;
   }
 }
 
-function adminAuthMiddleware(req: any, res: any, next: any) {
-  // Allow safe mutations in non-auth scenarios if specifically specified or skip verification temporarily
+async function adminAuthMiddleware(req: any, res: any, next: any) {
   const authHeader = req.headers["authorization"] || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "";
 
@@ -203,7 +247,7 @@ function adminAuthMiddleware(req: any, res: any, next: any) {
     return res.status(401).json({ error: "Access denied. Admin authentication required." });
   }
 
-  const decoded = verifyFirebaseToken(token);
+  const decoded = await verifyFirebaseToken(token);
   if (!decoded) {
     return res.status(401).json({ error: "Access denied. Invalid or expired administrative token." });
   }

@@ -1,20 +1,48 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# BitLance Blog & Resources Hub
 
-# Run and deploy your AI Studio app
+Content engine for [BitLance](https://bitlance.io) — the Bitcoin-native freelance marketplace. Optimized for SEO, AI search discovery (llms.txt), and client conversion.
 
-This contains everything you need to run your app locally.
+## Stack
 
-View your app in AI Studio: https://ai.studio/apps/e2b755df-755d-4852-a4bc-0220907937fb
+- **Frontend:** React 19, Vite, Tailwind CSS 4, TipTap editor
+- **Backend:** Express (TypeScript), Firebase Admin SDK, Firestore
+- **Media:** Cloudinary
+- **AI:** Gemini API (server-side)
 
-## Run Locally
+## Run locally
 
-**Prerequisites:**  Node.js
+Prerequisites: Node.js 20+
 
+```bash
+npm install
+cp .env.example .env.local   # then fill in the values
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Required environment variables — see `.env.example`:
+
+| Variable | Purpose |
+|---|---|
+| `GEMINI_API_KEY` | Server-side Gemini calls |
+| `FIREBASE_SERVICE_ACCOUNT` | Admin SDK credentials (JSON). Optional on Cloud Run (ADC is auto-detected) |
+| `ADMIN_EMAILS` | Comma-separated admin allowlist |
+| `CLOUDINARY_*` | Image storage |
+
+## Security model
+
+- Firestore rules **deny all direct client access**. Every read/write goes through the API server, which authenticates via the Firebase Admin SDK.
+- Admin endpoints verify Firebase ID tokens **cryptographically** (`verifyIdToken`) and check the email against `ADMIN_EMAILS`.
+- Admin accounts are created manually in the Firebase Console (Authentication → Add user). There is no self-serve admin signup.
+
+## Build & deploy
+
+```bash
+npm run build   # vite build + server bundle
+npm start       # serve dist/server.cjs
+```
+
+Deployed via Cloud Run (AI Studio) or Vercel (`vercel.json` included — set `FIREBASE_SERVICE_ACCOUNT` in project env vars).
+
+## Feeds & discovery
+
+Auto-generated at runtime: `/sitemap.xml`, `/feed.xml` (RSS), `/atom.xml`, `/feed.json`, `/robots.txt`, `/llms.txt`, `/llms-full.txt`.

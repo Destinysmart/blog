@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../../lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { Shield, Lock, Mail, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 
 export function AdminLogin() {
@@ -31,16 +31,6 @@ export function AdminLogin() {
     setIsLoading(true);
     setErrorMsg("");
 
-    // Bypass Firebase Auth entirely for demo credentials to avoid console errors
-    if (
-      email === "smartdestinyonyekachi@gmail.com" &&
-      password === "BitLance"
-    ) {
-      localStorage.setItem("mock_admin", "true");
-      navigate("/admin");
-      return;
-    }
-
     try {
       // Attempt sign in
       await signInWithEmailAndPassword(auth, email, password);
@@ -60,12 +50,6 @@ export function AdminLogin() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fillDemoCredentials = () => {
-    setEmail("smartdestinyonyekachi@gmail.com");
-    setPassword("BitLance");
-    setErrorMsg("");
   };
 
   return (
@@ -132,14 +116,7 @@ export function AdminLogin() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <button
-                type="button"
-                onClick={fillDemoCredentials}
-                className="text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors"
-              >
-                Use Demo Credentials
-              </button>
+            <div className="flex items-center justify-end pt-1">
               <Link to="/" className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors">
                 Back to main site
               </Link>
