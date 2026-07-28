@@ -81,22 +81,22 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
     fetch("/api/articles?status=published")
       .then((r) => r.json())
-      .then((data) => setArticles(data))
+      .then((data) => setArticles(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     fetch("/api/categories")
       .then((r) => r.json())
-      .then((data) => setCategories(data))
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     fetch("/api/topics")
       .then((r) => r.json())
-      .then((data) => setTopics(data))
+      .then((data) => setTopics(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     fetch("/api/users")
       .then((r) => r.json())
-      .then((data) => setUsers(data))
+      .then((data) => setUsers(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     // Focus input field on open

@@ -13,9 +13,9 @@ export function Featured() {
     ])
     .then(([arts, cats]) => {
       // Sort to get newest first (already sort of latest by ID but let's assume they are ordered)
-      const sorted = arts.sort((a: any, b: any) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+      const sorted = (Array.isArray(arts) ? arts : []).sort((a: any, b: any) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
       setArticles(sorted.slice(0, 4));
-      setCategories(cats);
+      setCategories(Array.isArray(cats) ? cats : []);
     })
     .catch(console.error);
   }, []);

@@ -92,25 +92,25 @@ export function HomePage() {
     // Fetch categories
     fetch("/api/categories")
       .then((r) => r.json())
-      .then((data) => setCategories(data))
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     // Fetch topics
     fetch("/api/topics")
       .then((r) => r.json())
-      .then((data) => setTopics(data))
+      .then((data) => setTopics(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     // Fetch featured collections
     fetch("/api/featured-collections")
       .then((r) => r.json())
-      .then((data) => setFeaturedCollections(data))
+      .then((data) => setFeaturedCollections(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     // Fetch users
     fetch("/api/users")
       .then((r) => r.json())
-      .then((data) => setUsers(data))
+      .then((data) => setUsers(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     // Fetch published articles
