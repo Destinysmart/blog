@@ -1,34 +1,107 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Github, Send, Globe, Heart } from "lucide-react";
+import { Github, Send, Globe, Heart, Zap, ArrowRight } from "lucide-react";
 import logoUrl from "../assets/images/bitlance_logo_1782869809232.jpg";
 
+// Change this if your Substack publication URL ever changes.
+const SUBSTACK_SUBSCRIBE_URL = "https://bitlance.substack.com/subscribe";
+
 export function Footer() {
+  const [email, setEmail] = useState("");
+
+  const handleSubscribe = () => {
+    const value = email.trim();
+    if (!value) return;
+    // Hand off to Substack's native subscribe flow with the email prefilled.
+    // Registration, confirmation and the welcome email all happen on Substack,
+    // exactly like the old embed — the subscriber shows up in your Substack dashboard.
+    window.location.href = `${SUBSTACK_SUBSCRIBE_URL}?email=${encodeURIComponent(value)}`;
+  };
+
   return (
     <footer className="bg-white border-t border-gray-100 pt-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Dedicated Newsletter Section/Card inside the footer container but at the top */}
+        {/* Newsletter Section — The Bitcoin Work Brief (custom UI → Substack subscribe flow) */}
         <div className="mb-16 animate-fade-in">
-          <div className="border border-gray-100 bg-[#FAF9F6]/60 rounded-[2rem] sm:rounded-[2.5rem] px-5 py-8 sm:p-10 md:p-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 shadow-sm">
-            <div className="max-w-xl text-left">
-              <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-950 tracking-tight mb-2">
-                Subscribe to our newsletter
-              </h3>
-              <p className="text-gray-500 text-sm leading-relaxed font-medium">
-                Get the latest updates and Bitcoin job opportunities.
-              </p>
-            </div>
-            
-            <div className="w-full lg:w-auto shrink-0 flex justify-center items-center py-2">
-              <iframe
-                src="https://bitlance.substack.com/embed"
-                width="480"
-                height="320"
-                className="w-full max-w-full md:max-w-[90%] lg:max-w-[480px] rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm bg-white h-[380px] sm:h-[320px] transition-all duration-300 hover:shadow-md"
-                style={{ border: "1px solid #EEE", background: "white" }}
-                frameBorder="0"
-                scrolling="no"
-                title="Substack Newsletter"
-              />
+          <div className="relative overflow-hidden border border-gray-100 bg-[#FAF9F6]/70 rounded-[2rem] sm:rounded-[2.5rem] px-5 py-8 sm:p-10 md:p-12 shadow-sm">
+            {/* faint decorative bitcoin glyph */}
+            <span
+              aria-hidden
+              className="pointer-events-none select-none absolute -right-6 -top-10 text-[180px] leading-none font-display font-bold text-brand-500/[0.06]"
+            >
+              ₿
+            </span>
+
+            <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              {/* Left: pitch */}
+              <div className="text-left">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 border border-brand-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-700 mb-4">
+                  <Zap className="h-3.5 w-3.5" /> The Bitcoin Work Brief · free · weekly
+                </span>
+                <h3 className="heading-display text-2xl sm:text-3xl md:text-[2.5rem] leading-[1.1] font-extrabold text-gray-950 tracking-tight mb-3">
+                  Get hired. Get paid in <span className="text-brand-500">sats.</span>
+                </h3>
+                <p className="text-gray-500 text-sm sm:text-base leading-relaxed font-medium max-w-md mb-6">
+                  One short email a week: real Bitcoin freelance gigs, remote roles, and
+                  the people winning them — before they hit the timeline.
+                </p>
+
+                <ul className="space-y-2.5">
+                  {[
+                    ["Live gigs & roles", "hand-picked openings across the Bitcoin ecosystem"],
+                    ["Earn-in-Bitcoin playbooks", "land clients, price in sats, get paid over Lightning"],
+                    ["Builder stories", "inside the companies hiring and who they hire"],
+                  ].map(([title, desc]) => (
+                    <li key={title} className="flex items-start gap-3 text-sm text-gray-600">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-brand-50">
+                        <Zap className="h-3 w-3 text-brand-500" />
+                      </span>
+                      <span>
+                        <span className="font-semibold text-gray-900">{title}</span>
+                        {" — "}{desc}.
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Right: capture */}
+              <div className="w-full">
+                <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white p-6 sm:p-7 shadow-sm">
+                  <h4 className="heading-display text-lg font-bold text-gray-950 mb-1">Join the Brief</h4>
+                  <p className="text-sm text-gray-500 mb-5">Free forever. Unsubscribe in one click.</p>
+
+                  <div className="flex flex-col gap-3">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
+                      placeholder="Type your email..."
+                      autoComplete="email"
+                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSubscribe}
+                      className="group inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-6 py-3.5 font-semibold text-white hover:bg-brand-600 active:scale-[0.99] transition-all shadow-sm"
+                    >
+                      Subscribe
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    </button>
+                  </div>
+
+                  <p className="mt-4 text-xs text-gray-500">
+                    <span className="font-semibold text-gray-700">Next issue:</span> open Bitcoin gigs paying in sats this week →
+                  </p>
+
+                  <div className="mt-4 flex items-center gap-4 pt-4 border-t border-gray-100 text-[11px] text-gray-400 font-medium">
+                    <span><span className="font-bold text-gray-600">100+</span> vetted freelancers</span>
+                    <span><span className="font-bold text-gray-600">100%</span> Bitcoin-native</span>
+                    <span>No spam, ever</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
